@@ -1000,8 +1000,8 @@ function contactForm(id) {
   const c = id ? S.contacts.find(x => x.id === id) : null;
   let follow = c ? c.follow : '';
   openSheet(`<h2>${c ? 'Ubah kontak' : 'Kontak baru'}</h2>
-    <div class="f"><label for="cName">Nama</label><input type="text" id="cName" value="${esc(c ? c.name : '')}" autocomplete="off" placeholder="Contoh: Okta"></div>
-    <div class="f"><label for="cOrg">Instansi / media</label><input type="text" id="cOrg" value="${esc(c ? c.org : '')}" placeholder="Contoh: Bappenas"></div>
+    <div class="f"><label for="cName">Nama</label><input type="text" id="cName" value="${esc(c ? c.name : '')}" autocomplete="off" placeholder="Contoh: Budi"></div>
+    <div class="f"><label for="cOrg">Instansi / media</label><input type="text" id="cOrg" value="${esc(c ? c.org : '')}" placeholder="Contoh: Dinas Kominfo"></div>
     <div class="f"><label for="cInter">Jenis interaksi</label><input type="text" id="cInter" value="${esc(c ? c.inter : '')}" placeholder="Rapat, telepon, wawancara…"></div>
     <div class="f"><label for="cTopic">Topik / isu</label><input type="text" id="cTopic" value="${esc(c ? c.topic : '')}"></div>
     <div class="f"><span class="lb">Perlu tindak lanjut?</span><div class="seg plain" id="cFol"><button type="button" data-v="Ya">Ya</button><button type="button" data-v="Tidak">Tidak</button><button type="button" data-v="">Belum tahu</button></div></div>
