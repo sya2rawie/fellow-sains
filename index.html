@@ -363,14 +363,24 @@ function allMonths() {
 
 /* ================= Foto (IndexedDB) ================= */
 const idb = {
-  db: null,
+  db: null, store: 'p',
+  // Toleran terhadap DB foto versi lama: nama store apa pun, key in-line/out-of-line, nilai Blob/dataURL/objek.
   open() {
     if (this.db) return Promise.resolve(this.db);
     return new Promise((res, rej) => {
       if (!window.indexedDB) return rej(new Error('IndexedDB tidak tersedia di browser ini'));
-      const r = indexedDB.open('alog-photos', 1);
+      const done = db => { db.onversionchange = () => { db.close(); this.db = null; }; this.db = db; res(db); };
+      const r = indexedDB.open('alog-photos');
       r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('p')) r.result.createObjectStore('p'); };
-      r.onsuccess = () => { this.db = r.result; res(this.db); };
+      r.onsuccess = () => {
+        const db = r.result; const names = [...db.objectStoreNames];
+        if (names.length) { this.store = names.includes('p') ? 'p' : names[0]; return done(db); }
+        const v = db.version + 1; db.close();
+        const r2 = indexedDB.open('alog-photos', v);
+        r2.onupgradeneeded = () => r2.result.createObjectStore('p');
+        r2.onsuccess = () => { this.store = 'p'; done(r2.result); };
+        r2.onerror = () => rej(r2.error || new Error('IndexedDB gagal dibuka'));
+      };
       r.onerror = () => rej(r.error || new Error('IndexedDB gagal dibuka'));
       r.onblocked = () => rej(new Error('IndexedDB terblokir, tutup tab lain'));
     });
@@ -378,16 +388,23 @@ const idb = {
   async run(mode, fn) {
     const db = await this.open();
     return new Promise((res, rej) => {
-      const t = db.transaction('p', mode); const req = fn(t.objectStore('p'));
+      const t = db.transaction(this.store, mode); const req = fn(t.objectStore(this.store));
       t.oncomplete = () => res(req ? req.result : undefined);
       t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('Transaksi dibatalkan'));
     });
   },
-  get(id) { return this.run('readonly', s => s.get(id)); },
-  put(id, blob) { return this.run('readwrite', s => s.put(blob, id)); },
+  async get(id) { return toBlob(await this.run('readonly', s => s.get(id))); },
+  put(id, blob) { return this.run('readwrite', s => s.keyPath ? s.put({[s.keyPath]: id, id, blob}) : s.put(blob, id)); },
   del(id) { return this.run('readwrite', s => s.delete(id)); },
   keys() { return this.run('readonly', s => s.getAllKeys()); }
 };
+function toBlob(v) {
+  if (!v) return null;
+  if (v instanceof Blob) return v;
+  if (typeof v === 'string') return v.startsWith('data:') ? dataURLtoBlob(v) : null;
+  if (typeof v === 'object') return toBlob(v.blob || v.data || v.file || v.src || v.url || v.dataURL);
+  return null;
+}
 const urlCache = new Map();
 async function photoURL(id) {
   if (urlCache.has(id)) return urlCache.get(id);
@@ -1004,12 +1021,14 @@ async function restore(file) {
   const msg = $('#bMsg'); msg.textContent = 'Membaca file…';
   try {
     const data = JSON.parse(await file.text());
-    const st = data && (data.state || data);
-    if (!st || !Array.isArray(st.days)) throw new Error('Bukan file cadangan Activity Log');
+    const st = [data && data.state, data && data.data, data].find(x => x && Array.isArray(x.days));
+    if (!st) throw new Error('Bukan file cadangan Activity Log');
     const n = st.days.reduce((a, d) => a + ((d.items || []).length), 0);
     if (!confirm(`Pulihkan ${st.days.length} hari dan ${n} aktivitas? Data sekarang diganti (bisa diurungkan sesaat).`)) { msg.textContent = ''; return; }
     let ok = 0, fail = 0;
-    for (const [id, u] of Object.entries(data.photos || {})) { try { await idb.put(id, dataURLtoBlob(u)); ok++; } catch (e) { fail++; } }
+    const ph = data.photos || data.imgs || data.images || {};
+    const pairs = Array.isArray(ph) ? ph.map(p => [p.id || p.key, p.data || p.dataURL || p.src || p.blob]) : Object.entries(ph);
+    for (const [id, u] of pairs) { try { const b = toBlob(u); if (!id || !b) throw 0; await idb.put(id, b); ok++; } catch (e) { fail++; } }
     replaceState(st, 'Data dipulihkan');
     const m2 = $('#bMsg'); if (m2) m2.textContent = `Dipulihkan: ${st.days.length} hari, ${n} aktivitas, ${ok} foto` + (fail ? `, ${fail} foto gagal` : '') + '.';
   } catch (e) { msg.textContent = 'Gagal memulihkan: ' + (e.message || e); }
