@@ -830,11 +830,13 @@ function itemForm({dayId, itemId, afterId, keep}) {
        type: it ? it.type : (keep ? keep.type : (S.prefs.type || 'MC')), ch: it ? it.ch : (keep ? keep.ch : (S.prefs.ch || '')), st: it ? it.st : 'Done',
        imgs: it ? it.imgs.slice() : [], added: [], removed: []};
   const ds = periodDays();
+  const dateOf = id => { const d = findDay(id); return d ? d.date : (S.period === curMonth() ? today() : ''); };
   const newLabel = S.period === curMonth() ? 'Hari baru (hari ini, ' + dateShort(today()) + ')' : 'Hari baru (tanpa tanggal)';
   const opts = ds.map(d => `<option value="${d.id}"${d.id === F.dayId ? ' selected' : ''}>${esc(dayTitle(d))}</option>`).join('') +
     `<option value="__new"${F.dayId === '__new' ? ' selected' : ''}>${esc(newLabel)}</option>`;
   const sh = openSheet(`
     <h2>${it ? 'Ubah aktivitas' : 'Aktivitas baru'}</h2>
+    <div class="f"><label for="fDate">Tanggal</label><input type="date" id="fDate" value="${esc(dateOf(F.dayId))}"><div class="tdesc">Ganti tanggal untuk memindah ke hari lain, termasuk minggu atau bulan lalu.</div></div>
     <div class="f"><label for="fDay">Hari</label><select id="fDay">${opts}</select></div>
     <div class="f"><label for="fText">Aktivitas</label><textarea id="fText" rows="3" placeholder="Apa yang dikerjakan?">${esc(it ? it.text : '')}</textarea></div>
     <div class="f"><span class="lb">Tipe</span><div class="seg" id="fType">${Object.keys(TYPES).map(t => `<button type="button" data-v="${t}">${t}</button>`).join('')}</div><div class="tdesc" id="fTypeD"></div></div>
@@ -857,6 +859,7 @@ function itemForm({dayId, itemId, afterId, keep}) {
   $('#fType').onclick = e => { const b = e.target.closest('button'); if (b) { F.type = b.dataset.v; paint(); } };
   $('#fCh').onclick = e => { const b = e.target.closest('button'); if (b) { F.ch = F.ch === b.dataset.v ? '' : b.dataset.v; paint(); } };
   $('#fSt').onclick = e => { const b = e.target.closest('button'); if (b) { F.st = b.dataset.v; paint(); } };
+  $('#fDay').onchange = e => { $('#fDate').value = dateOf(e.target.value); };
   $('#fCancel').onclick = () => closeSheet();
   $('#fSave').onclick = () => submitItem(false);
   if ($('#fMore')) $('#fMore').onclick = () => submitItem(true);
@@ -897,10 +900,10 @@ function cancelForm() { if (F && F.added.length) delPhotos(F.added); F = null; }
 function submitItem(more) {
   const ta = $('#fText'); const text = ta.value.trim();
   if (!text) { ta.classList.remove('shake'); void ta.offsetWidth; ta.classList.add('shake'); ta.focus(); return; }
-  let dayId = $('#fDay').value;
-  let day;
-  if (dayId === '__new') day = newDay(); else day = findDay(dayId);
-  if (!day) day = newDay();
+  const dayId = $('#fDay').value, dv = $('#fDate').value;
+  let day = dayId === '__new' ? null : findDay(dayId);
+  if (isDate(dv) && (!day || day.date !== dv)) day = dayForDate(dv);
+  else if (!day) day = newDay();
   const data = {text, type: F.type, ch: F.ch, st: F.st, imgs: F.imgs.slice()};
   if (F.itemId) {
     const r = findItem(F.itemId);
@@ -918,8 +921,19 @@ function submitItem(more) {
   const keep = {type: F.type, ch: F.ch};
   S.prefs.type = F.type; S.prefs.ch = F.ch;
   F = null; save(); closeSheet(true); render();
-  if (more) { itemForm({dayId: day.id, keep}); toast('Tersimpan. Lanjut isi berikutnya'); }
-  else toast('Tersimpan');
+  const where = day.date ? dateShort(day.date) : dayTitle(day);
+  if (more) { if (day.month !== S.period) { S.period = day.month; save(); render(); } itemForm({dayId: day.id, keep}); toast('Tersimpan ke ' + where + '. Lanjut isi berikutnya'); }
+  else if (day.month !== S.period) toast('Tersimpan ke ' + where + ' (' + monthName(day.month) + ')', 'Buka', () => { setPeriod(day.month); setTimeout(() => scrollToDay(day.id), 50); });
+  else { toast('Tersimpan ke ' + where); setTimeout(() => scrollToDay(day.id), 50); }
+}
+// Cari hari bertanggal tsb (bulan apa pun); kalau belum ada, buat dan sisipkan sesuai urutan tanggal.
+function dayForDate(date) {
+  const ex = S.days.find(d => d.date === date); if (ex) return ex;
+  const m = date.slice(0, 7); const d = {id: 'd' + uid(), label: '', date, month: m, items: []};
+  let idx = -1, last = -1;
+  S.days.forEach((x, i) => { if (x.month === m) { last = i; if (idx < 0 && x.date && x.date > date) idx = i; } });
+  if (idx < 0) idx = last >= 0 ? last + 1 : S.days.length;
+  S.days.splice(idx, 0, d); S.prefs.open[d.id] = true; return d;
 }
 function newDay() {
   const isCur = S.period === curMonth();
@@ -1035,6 +1049,8 @@ function renderNotes() {
       <p class="hint">${S.days.length} hari · ${nItems} aktivitas · <span id="nPh">… foto</span>. ${PWA ? 'Data hanya tersimpan di perangkat ini, jadi cadangkan rutin.' : 'Data tersinkron ke akun Claude-mu; cadangan JSON tetap disarankan sesekali.'}</p>
       <div class="grid2"><button type="button" class="btn" id="bBackup">Cadangkan</button>
       <div class="btn filebtn">Pulihkan<input type="file" id="bRestore" accept="application/json,.json" aria-label="Pulihkan dari file"></div></div>
+      <div class="grid2" style="margin-top:8px"><button type="button" class="btn" id="bCopy">Salin kode data</button><button type="button" class="btn" id="bPaste">Tempel kode data</button></div>
+      <p class="hint">Pindah ke HP/aplikasi lain tanpa file: tap Salin kode data di sini, lalu Tempel kode data di sana. Foto tidak ikut.</p>
       <p class="hint" id="bMsg"></p>
     </div>
     <div class="sec"><h3>Nama di header & PDF</h3>
@@ -1049,6 +1065,22 @@ function renderNotes() {
   });
   $('#nName').onchange = e => { S.name = e.target.value.trim() || DEFAULT_NAME; save(); render(); toast('Nama disimpan'); };
   $('#bBackup').onclick = backup;
+  $('#bCopy').onclick = async () => {
+    flushNote();
+    const ok = await copyText(JSON.stringify({app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S}));
+    $('#bMsg').textContent = ok ? `Kode data tersalin (${S.days.length} hari, ${S.days.reduce((a, d) => a + d.items.length, 0)} aktivitas). Buka aplikasi tujuan → Catatan → Tempel kode data.` : 'Gagal menyalin.';
+  };
+  $('#bPaste').onclick = () => {
+    openSheet(`<h2>Tempel kode data</h2><div class="f"><textarea id="pasteTa" rows="6" placeholder="Tempel kode data di sini"></textarea></div>
+      <p class="hint">Data di aplikasi ini akan diganti (bisa diurungkan sesaat).</p>
+      <div class="acts"><button type="button" class="btn" id="pCancel2">Batal</button><button type="button" class="btn pri" id="pGo2">Pulihkan</button></div>`);
+    $('#pCancel2').onclick = () => closeSheet();
+    $('#pGo2').onclick = async () => {
+      const t = $('#pasteTa').value.trim(); if (!t) return $('#pasteTa').focus();
+      let data; try { data = JSON.parse(t); } catch (e) { toast('Kode tidak lengkap atau rusak, salin ulang'); return; }
+      closeSheet(true); await restoreData(data);
+    };
+  };
   $('#bRestore').onchange = e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) restore(f); };
   $('#bReset').onclick = () => {
     if (!confirm('Atur ulang ke data awal?')) return;
@@ -1088,12 +1120,17 @@ async function backup() {
 }
 async function restore(file) {
   const msg = $('#bMsg'); msg.textContent = 'Membaca file…';
+  let data; try { data = JSON.parse(await file.text()); } catch (e) { msg.textContent = 'Gagal memulihkan: file rusak'; return; }
+  return restoreData(data);
+}
+async function restoreData(data) {
+  const msg = $('#bMsg') || {};
   try {
-    const data = JSON.parse(await file.text());
     const st = [data && data.state, data && data.data, data].find(x => x && Array.isArray(x.days));
     if (!st) throw new Error('Bukan file cadangan Activity Log');
     const n = st.days.reduce((a, d) => a + ((d.items || []).length), 0);
     if (!confirm(`Pulihkan ${st.days.length} hari dan ${n} aktivitas? Data sekarang diganti (bisa diurungkan sesaat).`)) { msg.textContent = ''; return; }
+    st.updated = Date.now();
     let ok = 0, fail = 0;
     const ph = data.photos || data.imgs || data.images || {};
     const pairs = Array.isArray(ph) ? ph.map(p => [p.id || p.key, p.data || p.dataURL || p.src || p.blob]) : Object.entries(ph);

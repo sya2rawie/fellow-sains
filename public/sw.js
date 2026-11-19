@@ -1,5 +1,5 @@
 // Naikkan versi CACHE setiap rilis agar HP mengambil versi baru.
-const CACHE = 'activity-log-v3';
+const CACHE = 'activity-log-v4';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './jspdf.umd.min.js',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
