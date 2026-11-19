@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Activity Log</title>
+<meta name="description" content="Activity Log External Relations & Media Communication">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#191919" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--card:#ffffff;--line:#e9e9e7;--line2:#dcdcd9;
+  --tx:#37352f;--tx2:#787774;--tx3:#a5a49f;
+  --acc:#2383e2;--acc-bg:#e7f0fb;--red:#e03e3e;--green:#0f9d58;
+  --shadow:0 1px 2px rgba(15,15,15,.06),0 4px 16px rgba(15,15,15,.08);
+  --t-ER:#0b6e99;--t-ER-bg:#ddebf1;--t-MC:#6940a5;--t-MC-bg:#eae4f2;--t-SM:#ad1a72;--t-SM-bg:#f4dfeb;
+  --t-PR:#d9730d;--t-PR-bg:#faebdd;--t-EV:#b8860b;--t-EV-bg:#fbf3db;--t-AD:#64635f;--t-AD-bg:#ebeced;
+  --s-p:#787774;--s-p-bg:#ebeced;--s-o:#0b6e99;--s-o-bg:#ddebf1;--s-d:#0f7b6c;--s-d-bg:#ddedea;--s-c:#e03e3e;--s-c-bg:#fbe4e4;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#191919;--bg2:#202020;--card:#252525;--line:#2f2f2f;--line2:#3a3a3a;
+  --tx:#e6e6e4;--tx2:#9b9b98;--tx3:#6b6b68;
+  --acc:#4c9be8;--acc-bg:#1f3347;--red:#ff6b61;--green:#2fb67c;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.45);
+  --t-ER:#6cb3d4;--t-ER-bg:#1e3542;--t-MC:#a98ad6;--t-MC-bg:#33294a;--t-SM:#e07bb4;--t-SM-bg:#45253a;
+  --t-PR:#ec9a50;--t-PR-bg:#47321e;--t-EV:#dcb84b;--t-EV-bg:#433a1d;--t-AD:#a5a49f;--t-AD-bg:#373737;
+  --s-p:#a5a49f;--s-p-bg:#373737;--s-o:#6cb3d4;--s-o-bg:#1e3542;--s-d:#4dbb9f;--s-d-bg:#1d3a33;--s-c:#ff7a70;--s-c-bg:#4a2523;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx)}
+body{font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));overscroll-behavior-y:contain}
+html.lock,html.lock body{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Header */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 96%,transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hrow{display:flex;align-items:center;gap:8px;min-height:52px}
+.ttl{flex:1;min-width:0}
+.ttl b{display:block;font-size:17px;letter-spacing:-.01em}
+.ttl small{display:block;color:var(--tx2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{min-height:44px;min-width:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line2);background:var(--card);font-weight:500;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{background:var(--bg2)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.danger{color:var(--red)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn[disabled]{opacity:.5}
+.per{display:flex;align-items:center;gap:4px;min-height:44px}
+.per .arw{width:44px;height:44px;border-radius:8px;font-size:22px;color:var(--tx2)}
+.per .arw:active{background:var(--bg2)}
+.pick{position:relative;flex:1;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;font-weight:600;border-radius:8px}
+.pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.tabs{display:flex;gap:2px}
+.tabs button{flex:1;min-height:44px;color:var(--tx2);font-weight:500;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--tx);border-bottom-color:var(--tx)}
+
+/* Toolbar */
+.search{display:flex;gap:8px;margin:12px 0 8px}
+.search input{flex:1;min-width:0;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:var(--bg2);outline:none}
+.search input:focus{border-color:var(--acc);background:var(--card)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);font-size:13px;color:var(--tx2);display:inline-flex;align-items:center;gap:6px;position:relative}
+.chip::after{content:"";position:absolute;inset:-4px 0}
+.chip b{font-weight:600;color:var(--tx)}
+.chip.on{background:var(--tx);border-color:var(--tx);color:var(--bg)}
+.chip.on b{color:var(--bg)}
+
+/* Days */
+#days{position:relative}
+.day{margin:6px 0;border-radius:10px;background:var(--bg)}
+.dhead{display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 4px 4px 8px;border-radius:10px;
+  user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y;cursor:pointer}
+.dhead:active{background:var(--bg2)}
+.dtitle{flex:1;min-width:0}
+.dtitle b{font-weight:600}
+.dtitle .dl{color:var(--tx2);margin-left:6px}
+.dtitle .today{font-size:11px;font-weight:600;color:var(--acc);background:var(--acc-bg);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+.dsub{display:flex;align-items:center;gap:4px;color:var(--tx2);font-size:12px;margin-top:1px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.mini{min-height:44px;padding:0 10px;border-radius:8px;color:var(--tx2);font-size:13px}
+.mini:active{background:var(--line)}
+.dbody{padding:0 0 6px}
+.day.closed .dbody{display:none}
+.drow{display:flex;gap:6px;margin-top:4px}
+.drow .btn{flex:1;font-size:13px;color:var(--tx2)}
+.dragmode .dbody{display:none!important}
+.dragmode .day{transition:none}
+.day.dragging{position:relative;z-index:10}
+.day.dragging .dhead{background:var(--card);box-shadow:var(--shadow);outline:1px solid var(--acc)}
+.dropline{position:absolute;left:4px;right:4px;height:3px;border-radius:2px;background:var(--acc);pointer-events:none;z-index:9;display:none}
+.dropline::before{content:"";position:absolute;left:-4px;top:-3px;width:9px;height:9px;border-radius:50%;background:var(--acc)}
+
+/* Swipe card */
+.sw{position:relative;margin:6px 0;border-radius:10px;overflow:hidden}
+.swa{position:absolute;top:0;bottom:0;width:96px;border:0;color:#fff;font-weight:600;font-size:14px;z-index:1;visibility:hidden}
+.swa.del{right:0;background:var(--red)}
+.swa.add{left:0;background:var(--green)}
+.sw[data-dir=del] .swa.del,.sw[data-dir=add] .swa.add{visibility:visible}
+.card{position:relative;z-index:2;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px;
+  touch-action:pan-y;transition:transform .2s cubic-bezier(.2,.8,.2,1);cursor:pointer}
+.crow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 4px}
+.tag{min-height:32px;padding:0 8px;border-radius:5px;font-size:12px;font-weight:600;letter-spacing:.02em;position:relative}
+.tag::after,.st::after{content:"";position:absolute;inset:-6px -2px}
+.ch{font-size:12px;color:var(--tx2)}
+.st{margin-left:auto;min-height:32px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;position:relative;display:inline-flex;align-items:center;gap:5px}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.ctext{margin:0;white-space:pre-wrap;word-wrap:break-word}
+.card.cx .ctext{color:var(--tx2);text-decoration:line-through;text-decoration-color:var(--tx3)}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:6px;background:var(--bg2);border:1px solid var(--line)}
+.T-ER{color:var(--t-ER);background:var(--t-ER-bg)}.T-MC{color:var(--t-MC);background:var(--t-MC-bg)}
+.T-SM{color:var(--t-SM);background:var(--t-SM-bg)}.T-PR{color:var(--t-PR);background:var(--t-PR-bg)}
+.T-EV{color:var(--t-EV);background:var(--t-EV-bg)}.T-AD,.T-X{color:var(--t-AD);background:var(--t-AD-bg)}
+.S-p{color:var(--s-p);background:var(--s-p-bg)}.S-o{color:var(--s-o);background:var(--s-o-bg)}
+.S-d{color:var(--s-d);background:var(--s-d-bg)}.S-c{color:var(--s-c);background:var(--s-c-bg)}
+.D-p{background:var(--s-p)}.D-o{background:var(--s-o)}.D-d{background:var(--s-d)}.D-c{background:var(--s-c)}
+
+.empty{text-align:center;color:var(--tx2);padding:48px 16px}
+.empty p{margin:0 0 14px}
+.foot{display:flex;gap:8px;margin:14px 0}
+.foot .btn{flex:1}
+
+/* Contacts & notes */
+.sec{margin:16px 0}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);margin:0 0 8px;font-weight:600}
+.ct{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0;cursor:pointer}
+.ct b{display:block}
+.ct small{color:var(--tx2)}
+.ct .lk{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.ct .lk a{min-height:36px;display:inline-flex;align-items:center;padding:0 10px;border-radius:6px;background:var(--bg2);color:var(--acc);text-decoration:none;font-size:13px}
+textarea.notes{width:100%;min-height:200px;border:1px solid var(--line2);border-radius:10px;padding:12px;background:var(--card);resize:vertical;outline:none}
+textarea.notes:focus{border-color:var(--acc)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.hint{color:var(--tx2);font-size:13px;margin:6px 0}
+
+/* FAB */
+.fab{position:fixed;right:calc(18px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;
+  width:60px;height:60px;border-radius:18px;background:var(--acc);color:#fff;font-size:30px;line-height:1;box-shadow:var(--shadow)}
+.fab:active{transform:scale(.96)}
+
+/* Sheet */
+.back{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.back.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:92vh;max-height:92dvh;overflow:auto;-webkit-overflow-scrolling:touch;
+  background:var(--card);border-radius:16px 16px 0 0;box-shadow:var(--shadow);transform:translateY(105%);transition:transform .24s cubic-bezier(.2,.8,.2,1);
+  padding:8px 16px calc(16px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto;overscroll-behavior:contain}
+.sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 8px}
+.sheet h2{font-size:17px;margin:4px 0 12px}
+.f{margin:0 0 14px}
+.f>label,.f>.lb{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.f input[type=text],.f input[type=tel],.f input[type=email],.f input[type=date],.f select,.f textarea{width:100%;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:10px 12px;background:var(--bg);outline:none}
+.f textarea{min-height:88px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--acc)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{min-height:44px;min-width:52px;padding:0 12px;border-radius:8px;border:1px solid var(--line2);font-weight:500;font-size:14px}
+.seg button.on{border-color:currentColor;font-weight:700}
+.seg.plain button.on{background:var(--tx);color:var(--bg)}
+.tdesc{font-size:13px;color:var(--tx2);margin-top:6px;min-height:19px}
+.chk{display:flex;align-items:center;gap:10px;min-height:44px}
+.chk input{width:20px;height:20px}
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.ph{position:relative;width:76px;height:76px}
+.ph img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.ph .x{position:absolute;top:-8px;right:-8px;width:32px;height:32px;border-radius:50%;background:var(--tx);color:var(--bg);font-size:16px;line-height:32px}
+.ptile{position:relative;width:76px;height:76px;border:1.5px dashed var(--line2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--tx2);font-size:13px;font-weight:600;text-align:center}
+.ptile input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+.perr{color:var(--red);font-size:13px;margin-top:6px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom));background:var(--card);padding:10px 0 calc(16px + env(safe-area-inset-bottom));margin-bottom:calc(-16px - env(safe-area-inset-bottom))}
+.acts .btn{flex:1 1 auto}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:60;
+  background:var(--tx);color:var(--bg);border-radius:10px;padding:6px 6px 6px 14px;display:flex;align-items:center;gap:8px;
+  max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:.2s;font-size:14px;box-shadow:var(--shadow)}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast span{padding:8px 4px 8px 0;flex:1}
+.toast{min-width:min(300px,calc(100vw - 32px))}
+.toast button{min-height:40px;padding:0 12px;border-radius:7px;color:var(--bg);font-weight:700;background:color-mix(in srgb,var(--bg) 18%,transparent)}
+.toast button:empty{display:none}
+
+/* Viewer */
+.viewer{position:fixed;inset:0;z-index:70;background:#000;display:none;align-items:center;justify-content:center}
+.viewer.on{display:flex}
+.viewer img{max-width:100%;max-height:100%;object-fit:contain}
+.viewer .vx,.viewer .vp,.viewer .vn{position:absolute;color:#fff;width:48px;height:48px;font-size:26px;border-radius:50%;background:rgba(255,255,255,.12)}
+.viewer .vx{top:calc(12px + env(safe-area-inset-top));right:12px}
+.viewer .vp{left:10px;top:50%}.viewer .vn{right:10px;top:50%}
+.viewer .vc{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));color:#fff;font-size:13px;opacity:.8}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="hrow">
+      <div class="ttl"><b>Activity Log</b><small id="hname"></small></div>
+      <button class="btn" id="pdfBtn" type="button">PDF</button>
+    </div>
+    <div class="per">
+      <button class="arw" id="prevM" type="button" aria-label="Bulan sebelumnya">‹</button>
+      <div class="pick"><span id="perLbl"></span><input type="month" id="perIn" aria-label="Pilih periode"></div>
+      <button class="arw" id="nextM" type="button" aria-label="Bulan berikutnya">›</button>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button type="button" data-tab="log">Log</button>
+      <button type="button" data-tab="kontak">Kontak</button>
+      <button type="button" data-tab="catatan">Catatan</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="v-log">
+    <div class="search">
+      <input id="q" type="search" placeholder="Cari aktivitas…" autocomplete="off" enterkeyhint="search">
+      <button class="btn" id="copyAll" type="button">Salin semua</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="days"></div>
+    <div class="foot" id="logFoot"><button class="btn" id="addDay" type="button">+ Hari</button></div>
+  </section>
+  <section id="v-kontak" hidden></section>
+  <section id="v-catatan" hidden></section>
+</main>
+
+<button class="fab" id="fab" type="button" aria-label="Tambah">+</button>
+<div class="back" id="back"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" role="status"><span id="tmsg"></span><button id="tbtn" type="button"></button></div>
+<div class="viewer" id="viewer"><img id="vimg" alt=""><button class="vp" id="vp" type="button">‹</button><button class="vn" id="vn" type="button">›</button><button class="vx" id="vx" type="button" aria-label="Tutup">×</button><div class="vc" id="vc"></div></div>
+
+<script src="jspdf.umd.min.js" defer></script>
+<script>
+'use strict';
+/* ================= Konstanta ================= */
+const KEY = 'alog-v1';
+const DEFAULT_NAME = "Muhammad Mutawallie Sya'rawie";
+const ROLE = 'External Relations & Media Communication';
+const TYPES = {ER:'External Relations',MC:'Media Communication',SM:'Social Media Management',PR:'Public Relations & Community Engagement',EV:'Event / Koordinasi',AD:'Administrasi / Koordinasi internal'};
+const STATUS = ['Pending','On Progress','Done','Cancelled'];
+const SCLS = {'Pending':'p','On Progress':'o','Done':'d','Cancelled':'c'};
+const CHANNELS = ['WhatsApp','Email','Luring','Rapat'];
+const CH_ALIAS = {wa:'WhatsApp',whatsapp:'WhatsApp',email:'Email','e-mail':'Email',luring:'Luring',offline:'Luring',rapat:'Rapat',meeting:'Rapat'};
+const ST_ALIAS = {pending:'Pending','on progress':'On Progress',progress:'On Progress','in progress':'On Progress',onprogress:'On Progress',proses:'On Progress',done:'Done',selesai:'Done',cancelled:'Cancelled',canceled:'Cancelled',batal:'Cancelled'};
+const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const HR = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+// Data awal Okt–Nov 2026: [tanggal, label, [[tipe, channel, status, teks], ...]]
+const SEED = [["2026-10-01","",[["ER","WhatsApp","Done","Koordinasi awal kerja sama dengan Humas Pemkot terkait agenda Hari Sumpah Pemuda"],["MC","Email","Done","Kirim rilis pers kegiatan seminar ke 12 media mitra"]]],["2026-10-02","",[["SM","","Done","Jadwalkan konten Instagram & TikTok untuk minggu pertama Oktober"],["PR","Luring","Done","Kunjungan silaturahmi ke tokoh masyarakat sekitar kampus"]]],["2026-10-06","",[["EV","Rapat","Done","Rapat panitia persiapan talkshow media"],["AD","Rapat","Done","Rekap laporan mingguan divisi untuk pimpinan"]]],["2026-10-07","",[["MC","WhatsApp","Done","Konfirmasi liputan wartawan Antara dan RRI"]]],["2026-10-08","",[["ER","Email","Done","Kirim surat permohonan audiensi ke Dinas Kominfo"],["SM","","Done","Monitoring insight Instagram dan rangkum performa konten"]]],["2026-10-09","",[["PR","Luring","Done","Pendampingan kegiatan bakti sosial bersama komunitas"],["MC","Luring","Done","Wawancara dengan media lokal tentang program beasiswa"]]],["2026-10-13","",[["EV","WhatsApp","Done","Koordinasi vendor dokumentasi dan publikasi acara"],["ER","Rapat","Done","Audiensi dengan Dinas Kominfo membahas kolaborasi publikasi"]]],["2026-10-14","",[["AD","","Done","Arsip dokumentasi foto kegiatan ke drive bersama"],["SM","","Done","Desain dan unggah infografis capaian program"]]],["2026-10-16","",[["MC","Email","Done","Distribusi rilis audiensi Dinas Kominfo ke media"],["EV","Rapat","Done","Gladi bersih talkshow media"]]],["2026-10-20","",[["EV","Luring","Done","Pelaksanaan talkshow media bersama tiga narasumber"],["MC","WhatsApp","Done","Kirim bahan berita dan foto talkshow ke wartawan"]]],["2026-10-22","",[["SM","","Done","Live report talkshow di Instagram Story"]]],["2026-10-23","",[["ER","WhatsApp","Done","Follow up MoU dengan komunitas literasi digital"],["PR","Luring","Cancelled","Kunjungan ke sekolah mitra untuk sosialisasi program"]]],["2026-10-27","",[["AD","Rapat","Done","Rapat evaluasi talkshow dan pembagian tindak lanjut"],["MC","","Done","Kliping pemberitaan talkshow (8 media online)"]]],["2026-10-29","",[["SM","","Done","Konten peringatan Hari Sumpah Pemuda"],["ER","Email","Done","Undangan media visit ke redaksi harian lokal"]]],["2026-11-02","",[["PR","WhatsApp","Done","Koordinasi relawan kegiatan Sumpah Pemuda"],["EV","Luring","Done","Pelaksanaan kegiatan Sumpah Pemuda bersama komunitas"]]],["2026-11-03","",[["MC","Email","Done","Rilis pers kegiatan Sumpah Pemuda"],["SM","","Done","Rekap performa media sosial bulan Oktober"]]],["2026-11-04","",[["AD","Rapat","Done","Penyusunan laporan bulanan Oktober"],["ER","Luring","Done","Media visit ke redaksi harian lokal"]]],["2026-11-05","",[["ER","Rapat","Done","Rapat koordinasi kerja sama dengan BUMN untuk program CSR"],["MC","WhatsApp","Done","Klarifikasi isu pemberitaan dengan redaksi media online"]]],["2026-11-06","",[["SM","","Done","Kalender konten November disetujui"],["PR","Luring","Done","Diskusi publik bersama karang taruna"]]],["2026-11-09","",[["EV","Rapat","Done","Rapat persiapan Dies Natalis"],["MC","Email","Done","Penyusunan press kit Dies Natalis"]]],["2026-11-10","",[["ER","Email","Done","Kirim proposal sponsorship Dies Natalis ke 5 mitra"]]],["2026-11-11","",[["AD","","Done","Update database kontak media dan mitra"],["SM","","Done","Kampanye countdown Dies Natalis di Instagram"]]],["2026-11-12","",[["ER","WhatsApp","On Progress","Follow up proposal sponsorship ke mitra perbankan"],["MC","Luring","Done","Pendampingan wartawan peliputan kegiatan rektorat"]]],["2026-11-13","",[["PR","Rapat","On Progress","Rapat koordinasi dengan RT/RW terkait acara Dies Natalis"],["EV","WhatsApp","On Progress","Konfirmasi undangan tamu VIP Dies Natalis"]]],["2026-11-16","",[["SM","","On Progress","Produksi video teaser Dies Natalis"],["MC","Email","On Progress","Undangan peliputan Dies Natalis ke media"]]],["2026-11-17","",[["ER","Rapat","On Progress","Audiensi dengan mitra perbankan terkait sponsorship"],["EV","Rapat","On Progress","Technical meeting Dies Natalis dengan seluruh divisi"]]],["2026-11-18","",[["AD","","Pending","Penyusunan anggaran publikasi Desember"],["MC","WhatsApp","Pending","Briefing narasumber untuk wawancara TV lokal"]]],["2026-11-19","",[["SM","","Pending","Balas komentar dan DM terkait pendaftaran acara"],["PR","Luring","Pending","Persiapan donor darah bersama komunitas"]]]];
+
+/* ================= Util ================= */
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => ymd(new Date());
+const curMonth = () => today().slice(0, 7);
+const pdate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const monthName = m => { const [y, mo] = m.split('-').map(Number); return BULAN[mo - 1] + ' ' + y; };
+const shiftMonth = (m, k) => { const [y, mo] = m.split('-').map(Number); const d = new Date(y, mo - 1 + k, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); };
+const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
+const isMonth = s => /^\d{4}-\d{2}$/.test(s || '');
+function dateShort(s) { const d = pdate(s); return HR[d.getDay()] + ', ' + d.getDate() + ' ' + BLN[d.getMonth()]; }
+function dateLong(s) { const d = pdate(s); return HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear(); }
+function dayTitle(d, long) {
+  const a = d.date ? (long ? dateLong(d.date) : dateShort(d.date)) : '';
+  if (a && d.label) return a + ' · ' + d.label;
+  return a || d.label || 'Tanpa tanggal';
+}
+const stCls = st => SCLS[st] || 'p';
+const typeCls = t => TYPES[t] ? t : 'X';
+
+/* ================= State ================= */
+let S;
+function seedState() {
+  const days = SEED.map(([date, label, items]) => ({
+    id: uid(), label, date, month: date.slice(0, 7),
+    items: items.map(([type, ch, st, text]) => ({id: uid(), text, type, ch, st, imgs: []}))
+  }));
+  return {days, contacts: {}, notesM: {}, prefs: {}, period: '2026-11', name: DEFAULT_NAME};
+}
+function normalize(s) {
+  if (!s || typeof s !== 'object') s = {};
+  if (!Array.isArray(s.days)) s.days = [];
+  if (!isMonth(s.period)) s.period = curMonth();
+  if (Array.isArray(s.contacts)) s.contacts = {[s.period]: s.contacts};
+  if (!s.contacts || typeof s.contacts !== 'object') s.contacts = {};
+  if (!s.notesM || typeof s.notesM !== 'object') s.notesM = {};
+  if (typeof s.notes === 'string' && s.notes && !s.notesM[s.period]) s.notesM[s.period] = s.notes;
+  if (!s.prefs || typeof s.prefs !== 'object') s.prefs = {};
+  if (!s.prefs.open || typeof s.prefs.open !== 'object') s.prefs.open = {};
+  if (!s.name) s.name = DEFAULT_NAME;
+  for (const d of s.days) {
+    if (!d.id) d.id = uid();
+    if (typeof d.label !== 'string') d.label = d.label == null ? '' : String(d.label);
+    if (!isDate(d.date)) d.date = '';
+    if (!isMonth(d.month)) d.month = d.date ? d.date.slice(0, 7) : s.period;
+    if (!Array.isArray(d.items)) d.items = [];
+    for (const it of d.items) {
+      if (!it.id) it.id = uid();
+      if (typeof it.text !== 'string') it.text = it.text == null ? '' : String(it.text);
+      if (!Array.isArray(it.imgs)) it.imgs = [];
+      if (it.ch == null) it.ch = '';
+      const ca = CH_ALIAS[String(it.ch).toLowerCase()]; if (ca) it.ch = ca;
+      const sa = ST_ALIAS[String(it.st || '').toLowerCase()]; if (sa) it.st = sa;
+      if (!it.st) it.st = 'Pending';
+      if (!it.type) it.type = 'ER';
+      it.type = String(it.type).toUpperCase();
+    }
+  }
+  for (const m in s.contacts) if (!Array.isArray(s.contacts[m])) delete s.contacts[m];
+  return s;
+}
+function load() {
+  let raw = null, s = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) {}
+  if (raw) {
+    try { s = JSON.parse(raw); } catch (e) { s = null; }
+    // Simpan salinan sebelum versi ini pertama kali menyentuh data.
+    try { if (!localStorage.getItem(KEY + '-preupgrade')) localStorage.setItem(KEY + '-preupgrade', raw); } catch (e) {}
+    if (!s || !Array.isArray(s.days)) {
+      try { localStorage.setItem(KEY + '-rusak-' + Date.now(), raw); } catch (e) {}
+      s = null;
+    }
+  }
+  return normalize(s || seedState());
+}
+let saveErrShown = false;
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); saveErrShown = false; }
+  catch (e) { if (!saveErrShown) { toast('Gagal menyimpan: penyimpanan penuh. Cadangkan data.'); saveErrShown = true; } }
+}
+const periodDays = (m = S.period) => S.days.filter(d => d.month === m);
+const findDay = id => S.days.find(d => d.id === id);
+function findItem(id) { for (const d of S.days) { const i = d.items.findIndex(x => x.id === id); if (i > -1) return {d, i, it: d.items[i]}; } return null; }
+function allMonths() {
+  const set = new Set(S.days.map(d => d.month));
+  for (const m in S.contacts) if (S.contacts[m].length) set.add(m);
+  for (const m in S.notesM) if ((S.notesM[m] || '').trim()) set.add(m);
+  return [...set].sort();
+}
+
+/* ================= Foto (IndexedDB) ================= */
+const idb = {
+  db: null,
+  open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      if (!window.indexedDB) return rej(new Error('IndexedDB tidak tersedia di browser ini'));
+      const r = indexedDB.open('alog-photos', 1);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('p')) r.result.createObjectStore('p'); };
+      r.onsuccess = () => { this.db = r.result; res(this.db); };
+      r.onerror = () => rej(r.error || new Error('IndexedDB gagal dibuka'));
+      r.onblocked = () => rej(new Error('IndexedDB terblokir, tutup tab lain'));
+    });
+  },
+  async run(mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('p', mode); const req = fn(t.objectStore('p'));
+      t.oncomplete = () => res(req ? req.result : undefined);
+      t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('Transaksi dibatalkan'));
+    });
+  },
+  get(id) { return this.run('readonly', s => s.get(id)); },
+  put(id, blob) { return this.run('readwrite', s => s.put(blob, id)); },
+  del(id) { return this.run('readwrite', s => s.delete(id)); },
+  keys() { return this.run('readonly', s => s.getAllKeys()); }
+};
+const urlCache = new Map();
+async function photoURL(id) {
+  if (urlCache.has(id)) return urlCache.get(id);
+  const b = await idb.get(id);
+  if (!b) return null;
+  const u = URL.createObjectURL(b); urlCache.set(id, u); return u;
+}
+function hydrate(root) {
+  root.querySelectorAll('img[data-img]').forEach(async img => {
+    try { const u = await photoURL(img.dataset.img); if (u) img.src = u; else img.alt = 'Foto hilang'; } catch (e) {}
+  });
+}
+async function delPhotos(ids) {
+  for (const id of ids) { try { await idb.del(id); } catch (e) {} const u = urlCache.get(id); if (u) { URL.revokeObjectURL(u); urlCache.delete(id); } }
+}
+function loadImgEl(file) {
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file); const im = new Image();
+    im.onload = () => { res(im); setTimeout(() => URL.revokeObjectURL(u), 1000); };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('Format foto tidak didukung (' + (file.type || 'tanpa tipe') + ')')); };
+    im.src = u;
+  });
+}
+async function compress(file) {
+  if (file.type && !/^image\//.test(file.type)) throw new Error('Bukan file gambar');
+  let src;
+  try { src = await createImageBitmap(file, {imageOrientation: 'from-image'}); }
+  catch (e) { src = await loadImgEl(file); }
+  const w0 = src.width || src.naturalWidth, h0 = src.height || src.naturalHeight;
+  if (!w0 || !h0) throw new Error('Foto tidak terbaca');
+  const k = Math.min(1, 1280 / Math.max(w0, h0));
+  const w = Math.round(w0 * k), h = Math.round(h0 * k);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(src, 0, 0, w, h);
+  if (src.close) src.close();
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82));
+  if (blob) return blob;
+  return dataURLtoBlob(c.toDataURL('image/jpeg', 0.82));
+}
+function dataURLtoBlob(u) {
+  const [h, b64] = u.split(','); const mime = (h.match(/data:([^;]+)/) || [])[1] || 'application/octet-stream';
+  const bin = atob(b64); const a = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return new Blob([a], {type: mime});
+}
+const blobToDataURL = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+
+/* ================= Toast & sheet ================= */
+let toastT = 0, toastFn = null;
+function toast(msg, label, fn, ms) {
+  $('#tmsg').textContent = msg; $('#tbtn').textContent = label || ''; toastFn = fn || null;
+  $('#toast').classList.add('on'); clearTimeout(toastT);
+  toastT = setTimeout(hideToast, ms || (fn ? 6000 : 2400));
+}
+function hideToast() { $('#toast').classList.remove('on'); const f = toastFn; toastFn = null; return f; }
+$('#tbtn').onclick = () => { clearTimeout(toastT); const f = hideToast(); if (f) f(); };
+
+let sheetClose = null;
+function openSheet(html, onClose) {
+  const sh = $('#sheet'); sh.innerHTML = '<div class="grab"></div>' + html; sh.scrollTop = 0;
+  sheetClose = onClose || null;
+  $('#back').classList.add('on'); sh.classList.add('on'); document.documentElement.classList.add('lock');
+  return sh;
+}
+function closeSheet(silent) {
+  const f = sheetClose; sheetClose = null;
+  $('#back').classList.remove('on'); $('#sheet').classList.remove('on'); document.documentElement.classList.remove('lock');
+  if (f && !silent) f();
+}
+$('#back').onclick = () => closeSheet();
+
+let suppressUntil = 0;
+document.addEventListener('click', e => { if (Date.now() < suppressUntil) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (e) {
+    const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {}
+    ta.remove(); return ok;
+  }
+}
+
+/* ================= Render ================= */
+function render() {
+  $('#hname').textContent = S.name + ' · ' + ROLE;
+  $('#perLbl').textContent = monthName(S.period);
+  $('#perIn').value = S.period;
+  const tab = S.prefs.tab || 'log';
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  $('#v-log').hidden = tab !== 'log'; $('#v-kontak').hidden = tab !== 'kontak'; $('#v-catatan').hidden = tab !== 'catatan';
+  $('#fab').hidden = tab === 'catatan';
+  if (tab === 'log') renderLog(); else if (tab === 'kontak') renderContacts(); else renderNotes();
+}
+let query = '';
+const filtering = () => !!query || (S.prefs.filter || 'all') !== 'all';
+function matches(it) {
+  const f = S.prefs.filter || 'all';
+  if (f !== 'all' && it.st !== f) return false;
+  if (!query) return true;
+  const hay = (it.text + ' ' + it.type + ' ' + (TYPES[it.type] || '') + ' ' + it.ch + ' ' + it.st).toLowerCase();
+  return query.split(/\s+/).every(w => hay.includes(w));
+}
+function isOpen(d, list) {
+  const v = S.prefs.open[d.id];
+  if (v != null) return v;
+  return d.date === today() || d === list[list.length - 1];
+}
+function renderLog() {
+  const days = periodDays();
+  const items = days.flatMap(d => d.items);
+  const f = S.prefs.filter || 'all';
+  const cnt = s => items.filter(i => i.st === s).length;
+  $('#chips').innerHTML = [['all', 'Semua', items.length], ...STATUS.map(s => [s, s, cnt(s)])]
+    .map(([v, l, n]) => `<button type="button" class="chip${f === v ? ' on' : ''}" data-f="${esc(v)}">${esc(l)} <b>${n}</b></button>`).join('');
+  const box = $('#days');
+  if (!days.length) {
+    box.innerHTML = `<div class="empty"><p>Belum ada aktivitas di ${esc(monthName(S.period))}.</p><button class="btn pri" type="button" data-act="addfirst">+ Tambah aktivitas</button></div>`;
+    $('#logFoot').hidden = true; return;
+  }
+  $('#logFoot').hidden = false;
+  const fl = filtering(); let shown = 0;
+  const html = days.map(d => {
+    const its = d.items.filter(matches);
+    if (fl && !its.length) return '';
+    shown++;
+    const open = fl || isOpen(d, days);
+    const dots = d.items.map(i => `<span class="dot D-${stCls(i.st)}"></span>`).join('');
+    return `<section class="day${open ? '' : ' closed'}" data-day="${d.id}">
+      <div class="dhead" data-act="toggle">
+        <div class="dtitle"><b>${esc(dayTitle(d))}</b>${d.date === today() ? '<span class="today">Hari ini</span>' : ''}
+          <div class="dsub">${dots}<span>${d.items.length} aktivitas</span></div></div>
+        <button type="button" class="mini" data-act="copyday">Salin</button>
+      </div>
+      <div class="dbody">${its.map(cardHTML).join('')}
+        <div class="drow"><button type="button" class="btn" data-act="addto">+ Aktivitas</button><button type="button" class="btn" data-act="editday">Ubah hari</button></div>
+      </div></section>`;
+  }).join('');
+  box.innerHTML = (shown ? html : `<div class="empty"><p>Tidak ada yang cocok.</p></div>`) + '<div class="dropline" id="dropline"></div>';
+  hydrate(box);
+}
+function cardHTML(it) {
+  const tc = typeCls(it.type);
+  return `<div class="sw" data-item="${it.id}">
+    <button type="button" class="swa add" data-act="swadd">Tambah</button>
+    <button type="button" class="swa del" data-act="swdel">Hapus</button>
+    <article class="card${it.st === 'Cancelled' ? ' cx' : ''}" data-act="edit">
+      <div class="crow"><button type="button" class="tag T-${tc}" data-act="tag" data-t="${esc(it.type)}">${esc(it.type)}</button>
+        ${it.ch ? `<span class="ch">${esc(it.ch)}</span>` : ''}
+        <button type="button" class="st S-${stCls(it.st)}" data-act="cycle">${esc(it.st)}</button></div>
+      <p class="ctext">${esc(it.text)}</p>
+      ${it.imgs.length ? `<div class="thumbs">${it.imgs.map((p, i) => `<img data-img="${esc(p)}" data-act="view" data-i="${i}" alt="Foto ${i + 1}" loading="lazy">`).join('')}</div>` : ''}
+    </article></div>`;
+}
+
+/* ================= Teks salin ================= */
+function dayText(d, its) {
+  const lines = ['*' + dayTitle(d, true) + '*'];
+  its.forEach((it, i) => lines.push(`${i + 1}. [${it.type}${it.ch ? ' · ' + it.ch : ''}] ${it.text} — ${it.st}`));
+  return lines.join('\n');
+}
+function allText() {
+  const parts = [`*Activity Log — ${monthName(S.period)}*`, S.name + ' · ' + ROLE];
+  for (const d of periodDays()) { const its = d.items.filter(matches); if (its.length) parts.push('', dayText(d, its)); }
+  return parts.join('\n');
+}
+
+/* ================= Interaksi log ================= */
+const daysEl = $('#days');
+$('#chips').addEventListener('click', e => {
+  const b = e.target.closest('[data-f]'); if (!b) return;
+  S.prefs.filter = b.dataset.f; save(); renderLog();
+});
+let qT = 0;
+$('#q').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { query = e.target.value.trim().toLowerCase(); renderLog(); }, 120); });
+$('#copyAll').onclick = async () => {
+  const n = periodDays().reduce((a, d) => a + d.items.filter(matches).length, 0);
+  if (!n) return toast('Tidak ada aktivitas untuk disalin');
+  toast((await copyText(allText())) ? `Tersalin ${n} aktivitas${filtering() ? ' (sesuai filter)' : ''}` : 'Gagal menyalin');
+};
+$('#addDay').onclick = () => addDay();
+$('#fab').onclick = () => (S.prefs.tab === 'kontak' ? contactForm() : itemForm({}));
+
+daysEl.addEventListener('click', async e => {
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  const act = a.dataset.act;
+  const sec = a.closest('.day'); const d = sec && findDay(sec.dataset.day);
+  const sw = a.closest('.sw'); const ref = sw && findItem(sw.dataset.item);
+  if (sw && sw === openSw && act !== 'swdel' && act !== 'swadd') { closeSwipe(); return; }
+  switch (act) {
+    case 'addfirst': return itemForm({});
+    case 'toggle': {
+      if (filtering()) return;
+      const open = sec.classList.toggle('closed') === false;
+      S.prefs.open[d.id] = open; save(); return;
+    }
+    case 'copyday': {
+      const its = d.items.filter(matches);
+      if (!its.length) return toast('Hari ini kosong');
+      return toast((await copyText(dayText(d, its))) ? 'Tersalin: ' + dayTitle(d) : 'Gagal menyalin');
+    }
+    case 'addto': return itemForm({dayId: d.id});
+    case 'editday': return dayForm(d);
+    case 'edit': return ref && itemForm({itemId: ref.it.id});
+    case 'tag': {
+      const t = a.dataset.t; const full = TYPES[t];
+      if (!full) return;
+      a.textContent = a.textContent === t ? t + ' · ' + full : t; return;
+    }
+    case 'cycle': {
+      const it = ref.it; const i = STATUS.indexOf(it.st);
+      it.st = (i === -1 || i >= 2) ? 'Pending' : STATUS[i + 1];
+      save(); renderLog(); return;
+    }
+    case 'view': return viewPhotos(ref.it.imgs, +a.dataset.i);
+    case 'swdel': return deleteItem(ref);
+    case 'swadd': closeSwipe(); return itemForm({dayId: ref.d.id, afterId: ref.it.id});
+  }
+});
+function deleteItem(ref) {
+  const {d, i, it} = ref;
+  d.items.splice(i, 1); save(); renderLog(); openSw = null;
+  let undone = false;
+  toast('Aktivitas dihapus', 'Urungkan', () => {
+    undone = true; const dd = findDay(d.id) || (S.days.push(d), d);
+    dd.items.splice(Math.min(i, dd.items.length), 0, it); save(); renderLog();
+  });
+  setTimeout(() => { if (!undone && !findItem(it.id)) delPhotos(it.imgs); }, 8000);
+}
+
+/* ---- Geser kartu ---- */
+let swp = null, openSw = null;
+const SW_OPEN = 96;
+function setX(card, x, anim) { card.style.transition = anim ? '' : 'none'; card.style.transform = x ? `translateX(${x}px)` : ''; }
+function closeSwipe() {
+  if (!openSw) return; const c = openSw.querySelector('.card'); const w = openSw;
+  setX(c, 0, true); openSw = null; setTimeout(() => { if (w !== openSw) delete w.dataset.dir; }, 220);
+}
+document.addEventListener('pointerdown', e => { if (openSw && !openSw.contains(e.target)) closeSwipe(); }, true);
+daysEl.addEventListener('pointerdown', e => {
+  const card = e.target.closest('.card'); if (!card || e.button > 0 || drag) return;
+  if (e.target.closest('button')) { /* tetap boleh geser dari tag/status */ }
+  const w = card.parentElement;
+  swp = {card, w, x0: e.clientX, y0: e.clientY, base: w === openSw ? (w.dataset.dir === 'del' ? -SW_OPEN : SW_OPEN) : 0, mode: null, pid: e.pointerId, x: 0};
+});
+window.addEventListener('pointermove', e => {
+  if (!swp || e.pointerId !== swp.pid) return;
+  const dx = e.clientX - swp.x0, dy = e.clientY - swp.y0;
+  if (!swp.mode) {
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      swp.mode = 'h'; try { swp.card.setPointerCapture(swp.pid); } catch (er) {}
+      if (openSw && openSw !== swp.w) closeSwipe();
+    } else if (Math.abs(dy) > 10) { swp = null; return; } else return;
+  }
+  let x = swp.base + dx; x = Math.max(-140, Math.min(140, x));
+  swp.x = x; swp.w.dataset.dir = x < 0 ? 'del' : 'add';
+  setX(swp.card, x, false);
+});
+function endSwipe(e) {
+  if (!swp || e.pointerId !== swp.pid) return;
+  const s = swp; swp = null;
+  if (s.mode !== 'h') return;
+  suppressUntil = Date.now() + 350;
+  if (s.x <= -56) { setX(s.card, -SW_OPEN, true); s.w.dataset.dir = 'del'; openSw = s.w; }
+  else if (s.x >= 56) { setX(s.card, SW_OPEN, true); s.w.dataset.dir = 'add'; openSw = s.w; }
+  else { setX(s.card, 0, true); if (openSw === s.w) openSw = null; setTimeout(() => { if (s.w !== openSw) delete s.w.dataset.dir; }, 220); }
+}
+window.addEventListener('pointerup', endSwipe);
+window.addEventListener('pointercancel', e => { if (swp && e.pointerId === swp.pid) { setX(swp.card, swp.base, true); if (!swp.base) delete swp.w.dataset.dir; swp = null; } });
+
+/* ---- Tekan lama + seret hari ---- */
+let lp = null, drag = null;
+const LP_MS = 380;
+daysEl.addEventListener('contextmenu', e => { if (e.target.closest('.dhead')) e.preventDefault(); });
+daysEl.addEventListener('pointerdown', e => {
+  const h = e.target.closest('.dhead');
+  if (!h || e.target.closest('button') || e.button > 0 || drag) return;
+  if (filtering()) return;
+  const sec = h.parentElement;
+  lp = {h, sec, x: e.clientX, y: e.clientY, pid: e.pointerId, t: setTimeout(() => startDrag(), LP_MS)};
+});
+window.addEventListener('pointermove', e => {
+  if (lp && !drag && e.pointerId === lp.pid) {
+    if (Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 8) { clearTimeout(lp.t); lp = null; }
+    return;
+  }
+  if (drag && e.pointerId === drag.pid) { drag.y = e.clientY; dragUpdate(); }
+});
+function lpEnd(e) {
+  if (lp && e.pointerId === lp.pid) { clearTimeout(lp.t); lp = null; }
+  if (drag && e.pointerId === drag.pid) endDrag();
+}
+window.addEventListener('pointerup', lpEnd);
+window.addEventListener('pointercancel', lpEnd);
+document.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, {passive: false});
+
+function startDrag() {
+  const {h, sec, y, pid} = lp; lp = null;
+  if (!sec.isConnected) return;
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+  closeSwipe();
+  const before = sec.getBoundingClientRect().top;
+  daysEl.classList.add('dragmode'); sec.classList.add('dragging');
+  // Jaga agar header tetap di bawah jari setelah semua hari menciut
+  const after = sec.getBoundingClientRect().top;
+  window.scrollBy(0, after - before);
+  try { h.setPointerCapture(pid); } catch (e) {}
+  drag = {sec, h, pid, y, y0: y, s0: window.scrollY, idx: -1, raf: 0, line: $('#dropline')};
+  drag.line.style.display = 'block';
+  dragUpdate();
+  const loop = () => {
+    if (!drag) return;
+    const edge = 72, vh = window.innerHeight;
+    let v = 0;
+    if (drag.y < edge + 40) v = -Math.ceil((edge + 40 - drag.y) / 6);
+    else if (drag.y > vh - edge) v = Math.ceil((drag.y - (vh - edge)) / 6);
+    if (v) { window.scrollBy(0, v); dragUpdate(); }
+    drag.raf = requestAnimationFrame(loop);
+  };
+  drag.raf = requestAnimationFrame(loop);
+}
+function dragUpdate() {
+  const {sec, line} = drag;
+  const dy = (drag.y - drag.y0) + (window.scrollY - drag.s0);
+  sec.style.transform = `translateY(${dy}px)`;
+  const others = [...daysEl.querySelectorAll('.day')].filter(x => x !== sec);
+  let idx = 0;
+  for (const o of others) { const r = o.getBoundingClientRect(); if (drag.y > r.top + r.height / 2) idx++; }
+  drag.idx = idx;
+  let top;
+  if (!others.length) top = sec.offsetTop - 4;
+  else if (idx < others.length) top = others[idx].offsetTop - 5;
+  else { const l = others[others.length - 1]; top = l.offsetTop + l.offsetHeight + 2; }
+  line.style.top = top + 'px';
+}
+function endDrag() {
+  const d = drag; drag = null;
+  cancelAnimationFrame(d.raf);
+  try { d.h.releasePointerCapture(d.pid); } catch (e) {}
+  daysEl.classList.remove('dragmode'); d.sec.classList.remove('dragging'); d.sec.style.transform = '';
+  d.line.style.display = 'none';
+  suppressUntil = Date.now() + 400;
+  const list = periodDays(); const id = d.sec.dataset.day;
+  const order = list.filter(x => x.id !== id); order.splice(d.idx, 0, findDay(id));
+  const changed = order.some((x, i) => x !== list[i]);
+  if (changed) {
+    const slots = []; S.days.forEach((x, i) => { if (x.month === S.period) slots.push(i); });
+    slots.forEach((si, k) => { S.days[si] = order[k]; });
+    save(); toast('Urutan hari disimpan');
+  }
+  renderLog();
+}
+
+/* ================= Form aktivitas ================= */
+let F = null;
+function defaultDayId() {
+  const ds = periodDays(); const t = today();
+  const td = ds.find(d => d.date === t); if (td) return td.id;
+  if (S.period === curMonth() || !ds.length) return '__new';
+  return ds[ds.length - 1].id;
+}
+function itemForm({dayId, itemId, afterId, keep}) {
+  const ref = itemId ? findItem(itemId) : null;
+  const it = ref ? ref.it : null;
+  F = {itemId: it ? it.id : null, afterId: afterId || null, dayId: ref ? ref.d.id : (dayId || defaultDayId()),
+       type: it ? it.type : (keep ? keep.type : 'ER'), ch: it ? it.ch : (keep ? keep.ch : ''), st: it ? it.st : 'Pending',
+       imgs: it ? it.imgs.slice() : [], added: [], removed: []};
+  const ds = periodDays();
+  const newLabel = S.period === curMonth() ? 'Hari baru (hari ini, ' + dateShort(today()) + ')' : 'Hari baru (tanpa tanggal)';
+  const opts = ds.map(d => `<option value="${d.id}"${d.id === F.dayId ? ' selected' : ''}>${esc(dayTitle(d))}</option>`).join('') +
+    `<option value="__new"${F.dayId === '__new' ? ' selected' : ''}>${esc(newLabel)}</option>`;
+  const sh = openSheet(`
+    <h2>${it ? 'Ubah aktivitas' : 'Aktivitas baru'}</h2>
+    <div class="f"><label for="fDay">Hari</label><select id="fDay">${opts}</select></div>
+    <div class="f"><label for="fText">Aktivitas</label><textarea id="fText" rows="3" placeholder="Apa yang dikerjakan?">${esc(it ? it.text : '')}</textarea></div>
+    <div class="f"><span class="lb">Tipe</span><div class="seg" id="fType">${Object.keys(TYPES).map(t => `<button type="button" data-v="${t}">${t}</button>`).join('')}</div><div class="tdesc" id="fTypeD"></div></div>
+    <div class="f"><span class="lb">Channel</span><div class="seg plain" id="fCh">${CHANNELS.map(c => `<button type="button" data-v="${c}">${c}</button>`).join('')}</div></div>
+    <div class="f"><span class="lb">Status</span><div class="seg" id="fSt">${STATUS.map(s => `<button type="button" data-v="${s}">${s}</button>`).join('')}</div></div>
+    <div class="f"><span class="lb">Foto</span><div class="photos" id="fPh"></div><div class="perr" id="fPhErr" role="alert"></div></div>
+    <div class="acts">
+      ${it ? '<button type="button" class="btn danger" id="fDel">Hapus</button>' : ''}
+      <button type="button" class="btn" id="fCancel">Batal</button>
+      ${it ? '' : '<button type="button" class="btn" id="fMore">Simpan &amp; tambah lagi</button>'}
+      <button type="button" class="btn pri" id="fSave">Simpan</button>
+    </div>`, cancelForm);
+  const paint = () => {
+    sh.querySelectorAll('#fType button').forEach(b => { const on = b.dataset.v === F.type; b.classList.toggle('on', on); b.className = (on ? 'on T-' + b.dataset.v : ''); });
+    $('#fTypeD').textContent = F.type + ' — ' + (TYPES[F.type] || F.type);
+    sh.querySelectorAll('#fCh button').forEach(b => b.classList.toggle('on', b.dataset.v === F.ch));
+    sh.querySelectorAll('#fSt button').forEach(b => { const on = b.dataset.v === F.st; b.className = on ? 'on S-' + stCls(b.dataset.v) : ''; });
+  };
+  paint(); paintPhotos();
+  $('#fType').onclick = e => { const b = e.target.closest('button'); if (b) { F.type = b.dataset.v; paint(); } };
+  $('#fCh').onclick = e => { const b = e.target.closest('button'); if (b) { F.ch = F.ch === b.dataset.v ? '' : b.dataset.v; paint(); } };
+  $('#fSt').onclick = e => { const b = e.target.closest('button'); if (b) { F.st = b.dataset.v; paint(); } };
+  $('#fCancel').onclick = () => closeSheet();
+  $('#fSave').onclick = () => submitItem(false);
+  if ($('#fMore')) $('#fMore').onclick = () => submitItem(true);
+  if ($('#fDel')) $('#fDel').onclick = () => { const r = findItem(F.itemId); F = null; closeSheet(true); if (r) deleteItem(r); };
+  if (!it) setTimeout(() => { const t = $('#fText'); if (t && $('#sheet').classList.contains('on')) t.focus(); }, 260);
+}
+function paintPhotos() {
+  const box = $('#fPh'); if (!box) return;
+  box.innerHTML = F.imgs.map((id, i) => `<div class="ph"><img data-img="${esc(id)}" alt="Foto ${i + 1}"><button type="button" class="x" data-rm="${i}" aria-label="Hapus foto">×</button></div>`).join('') +
+    `<div class="ptile"><span>+ Foto</span><input type="file" id="fFile" accept="image/*" multiple aria-label="Tambah foto"></div>`;
+  hydrate(box);
+  box.onclick = e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return;
+    const [id] = F.imgs.splice(+b.dataset.rm, 1);
+    if (F.added.includes(id)) { F.added = F.added.filter(x => x !== id); delPhotos([id]); } else F.removed.push(id);
+    paintPhotos();
+  };
+  $('#fFile').onchange = async e => {
+    const files = [...(e.target.files || [])]; const err = $('#fPhErr'); err.textContent = '';
+    if (!files.length) { err.textContent = 'Tidak ada file yang dipilih.'; return; }
+    const tile = box.querySelector('.ptile span'); if (tile) tile.textContent = 'Memproses…';
+    const fails = [];
+    for (const f of files) {
+      try {
+        const blob = await compress(f);
+        const id = 'L:' + uid();
+        await idb.put(id, blob);
+        if (!F) { delPhotos([id]); return; }
+        F.imgs.push(id); F.added.push(id);
+      } catch (er) { fails.push((f.name || 'foto') + ': ' + (er && er.message ? er.message : er)); }
+    }
+    if (!F) return;
+    paintPhotos();
+    if (fails.length) $('#fPhErr').textContent = 'Gagal: ' + fails.join('; ');
+  };
+}
+function cancelForm() { if (F && F.added.length) delPhotos(F.added); F = null; }
+function submitItem(more) {
+  const ta = $('#fText'); const text = ta.value.trim();
+  if (!text) { ta.classList.remove('shake'); void ta.offsetWidth; ta.classList.add('shake'); ta.focus(); return; }
+  let dayId = $('#fDay').value;
+  let day;
+  if (dayId === '__new') day = newDay(); else day = findDay(dayId);
+  if (!day) day = newDay();
+  const data = {text, type: F.type, ch: F.ch, st: F.st, imgs: F.imgs.slice()};
+  if (F.itemId) {
+    const r = findItem(F.itemId);
+    if (r) {
+      Object.assign(r.it, data);
+      if (r.d !== day) { r.d.items.splice(r.i, 1); day.items.push(r.it); }
+    }
+  } else {
+    const it = {id: uid(), ...data};
+    const ai = F.afterId ? day.items.findIndex(x => x.id === F.afterId) : -1;
+    if (ai > -1) day.items.splice(ai + 1, 0, it); else day.items.push(it);
+  }
+  if (F.removed.length) delPhotos(F.removed);
+  S.prefs.open[day.id] = true;
+  const keep = {type: F.type, ch: F.ch};
+  F = null; save(); closeSheet(true); render();
+  if (more) { itemForm({dayId: day.id, keep}); toast('Tersimpan. Lanjut isi berikutnya'); }
+  else toast('Tersimpan');
+}
+function newDay() {
+  const isCur = S.period === curMonth();
+  if (isCur) { const ex = periodDays().find(d => d.date === today()); if (ex) return ex; }
+  const d = {id: uid(), label: '', date: isCur ? today() : '', month: S.period, items: []};
+  S.days.push(d); return d;
+}
+function addDay() {
+  const isCur = S.period === curMonth();
+  if (isCur && periodDays().some(d => d.date === today())) {
+    const d = periodDays().find(x => x.date === today()); S.prefs.open[d.id] = true; save(); renderLog();
+    scrollToDay(d.id); return toast('Hari ini sudah ada');
+  }
+  const d = newDay(); S.prefs.open[d.id] = true; save(); renderLog(); scrollToDay(d.id);
+  if (!isCur) dayForm(d); else toast('Hari ditambahkan: ' + dateShort(d.date));
+}
+function scrollToDay(id) { const el = daysEl.querySelector(`[data-day="${id}"]`); if (el) el.scrollIntoView({block: 'center', behavior: 'smooth'}); }
+
+/* ---- Form hari ---- */
+function dayForm(d) {
+  openSheet(`<h2>Ubah hari</h2>
+    <div class="f"><label for="dDate">Tanggal</label><input type="date" id="dDate" value="${esc(d.date)}"></div>
+    <div class="f"><label for="dLabel">Label (opsional)</label><input type="text" id="dLabel" value="${esc(d.label)}" placeholder="mis. Persiapan Dies Natalis"></div>
+    <p class="hint">Hari tanpa tanggal tetap berada di ${esc(monthName(d.month))}.</p>
+    <div class="acts"><button type="button" class="btn danger" id="dDel">Hapus hari</button><button type="button" class="btn" id="dCancel">Batal</button><button type="button" class="btn pri" id="dSave">Simpan</button></div>`);
+  $('#dCancel').onclick = () => closeSheet();
+  $('#dSave').onclick = () => {
+    const date = $('#dDate').value; d.label = $('#dLabel').value.trim();
+    d.date = isDate(date) ? date : '';
+    let moved = false;
+    if (d.date && d.date.slice(0, 7) !== d.month) { d.month = d.date.slice(0, 7); moved = true; }
+    save(); closeSheet(true); render();
+    toast(moved ? 'Hari dipindah ke ' + monthName(d.month) : 'Hari disimpan', moved ? 'Buka' : '', moved ? () => { S.period = d.month; save(); render(); } : null);
+  };
+  $('#dDel').onclick = () => {
+    const i = S.days.indexOf(d); if (i < 0) return;
+    S.days.splice(i, 1); save(); closeSheet(true); render();
+    let undone = false;
+    toast(`Hari dihapus (${d.items.length} aktivitas)`, 'Urungkan', () => { undone = true; S.days.splice(Math.min(i, S.days.length), 0, d); save(); render(); }, 8000);
+    setTimeout(() => { if (!undone && !findDay(d.id)) delPhotos(d.items.flatMap(x => x.imgs)); }, 10000);
+  };
+}
+
+/* ================= Viewer foto ================= */
+let V = null;
+async function viewPhotos(ids, i) {
+  V = {ids, i}; $('#viewer').classList.add('on'); await showV();
+}
+async function showV() {
+  const {ids, i} = V; $('#vimg').removeAttribute('src');
+  $('#vp').hidden = $('#vn').hidden = ids.length < 2; $('#vc').textContent = ids.length > 1 ? (i + 1) + ' / ' + ids.length : '';
+  try { const u = await photoURL(ids[i]); if (u) $('#vimg').src = u; } catch (e) {}
+}
+$('#vx').onclick = () => { $('#viewer').classList.remove('on'); V = null; };
+$('#vimg').onclick = $('#vx').onclick;
+$('#vp').onclick = () => { V.i = (V.i - 1 + V.ids.length) % V.ids.length; showV(); };
+$('#vn').onclick = () => { V.i = (V.i + 1) % V.ids.length; showV(); };
+
+/* ================= Kontak ================= */
+const contactsOf = m => S.contacts[m] || (S.contacts[m] = []);
+function waLink(p) { let n = String(p).replace(/[^\d+]/g, '').replace(/^\+/, ''); if (n.startsWith('0')) n = '62' + n.slice(1); return 'https://wa.me/' + n; }
+function renderContacts() {
+  const list = S.contacts[S.period] || [];
+  const prev = [...allMonths()].reverse().find(m => m < S.period && (S.contacts[m] || []).length);
+  $('#v-kontak').innerHTML = `<div class="sec"><h3>Kontak · ${esc(monthName(S.period))}</h3>
+    ${list.length ? list.map(c => `<div class="ct" data-c="${c.id}"><b>${esc(c.name)}</b>${c.org ? `<small>${esc(c.org)}</small>` : ''}
+      ${c.note ? `<div class="hint">${esc(c.note)}</div>` : ''}
+      <div class="lk">${c.phone ? `<a href="${esc(waLink(c.phone))}" target="_blank" rel="noopener">WhatsApp</a><a href="tel:${esc(c.phone)}">Telepon</a>` : ''}${c.email ? `<a href="mailto:${esc(c.email)}">Email</a>` : ''}</div></div>`).join('')
+    : `<div class="empty"><p>Belum ada kontak di bulan ini.</p><button type="button" class="btn pri" id="cAdd">+ Tambah kontak</button>
+       ${prev ? `<p style="margin-top:12px"><button type="button" class="btn" id="cCopy">Salin dari ${esc(monthName(prev))}</button></p>` : ''}</div>`}</div>`;
+  const v = $('#v-kontak');
+  v.onclick = e => {
+    if (e.target.closest('a')) return;
+    if (e.target.id === 'cAdd') return contactForm();
+    if (e.target.id === 'cCopy') { S.contacts[S.period] = S.contacts[prev].map(c => ({...c, id: uid()})); save(); renderContacts(); return toast('Kontak disalin'); }
+    const c = e.target.closest('[data-c]'); if (c) contactForm(c.dataset.c);
+  };
+}
+function contactForm(id) {
+  const list = contactsOf(S.period); const c = id ? list.find(x => x.id === id) : null;
+  openSheet(`<h2>${c ? 'Ubah kontak' : 'Kontak baru'}</h2>
+    <div class="f"><label for="cName">Nama</label><input type="text" id="cName" value="${esc(c ? c.name : '')}" autocomplete="off"></div>
+    <div class="f"><label for="cOrg">Instansi / jabatan</label><input type="text" id="cOrg" value="${esc(c ? c.org : '')}"></div>
+    <div class="grid2"><div class="f"><label for="cPhone">No. HP</label><input type="tel" id="cPhone" value="${esc(c ? c.phone : '')}"></div>
+    <div class="f"><label for="cEmail">Email</label><input type="email" id="cEmail" value="${esc(c ? c.email : '')}"></div></div>
+    <div class="f"><label for="cNote">Catatan</label><input type="text" id="cNote" value="${esc(c ? c.note : '')}"></div>
+    <div class="acts">${c ? '<button type="button" class="btn danger" id="cDel">Hapus</button>' : ''}<button type="button" class="btn" id="cCancel">Batal</button><button type="button" class="btn pri" id="cSave">Simpan</button></div>`);
+  if (!c) setTimeout(() => $('#cName') && $('#cName').focus(), 260);
+  $('#cCancel').onclick = () => closeSheet();
+  $('#cSave').onclick = () => {
+    const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
+    const data = {name, org: $('#cOrg').value.trim(), phone: $('#cPhone').value.trim(), email: $('#cEmail').value.trim(), note: $('#cNote').value.trim()};
+    if (c) Object.assign(c, data); else list.push({id: uid(), ...data});
+    save(); closeSheet(true); render(); toast('Kontak disimpan');
+  };
+  if ($('#cDel')) $('#cDel').onclick = () => {
+    const i = list.indexOf(c); list.splice(i, 1); save(); closeSheet(true); render();
+    toast('Kontak dihapus', 'Urungkan', () => { list.splice(i, 0, c); save(); render(); });
+  };
+}
+
+/* ================= Catatan & data ================= */
+let noteT = 0;
+function renderNotes() {
+  const v = $('#v-catatan');
+  const nItems = S.days.reduce((a, d) => a + d.items.length, 0);
+  v.innerHTML = `<div class="sec"><h3>Catatan · ${esc(monthName(S.period))}</h3>
+    <textarea class="notes" id="nText" placeholder="Catatan bulan ini…">${esc(S.notesM[S.period] || '')}</textarea>
+    <div class="hint" id="nState">Tersimpan otomatis</div></div>
+    <div class="sec"><h3>Data di HP ini</h3>
+      <p class="hint">${S.days.length} hari · ${nItems} aktivitas · <span id="nPh">… foto</span>. Data hanya tersimpan di perangkat ini, jadi cadangkan rutin.</p>
+      <div class="grid2"><button type="button" class="btn" id="bBackup">Cadangkan</button>
+      <div class="btn filebtn">Pulihkan<input type="file" id="bRestore" accept="application/json,.json" aria-label="Pulihkan dari file"></div></div>
+      <p class="hint" id="bMsg"></p>
+    </div>
+    <div class="sec"><h3>Nama di header & PDF</h3>
+      <div class="f"><input type="text" id="nName" value="${esc(S.name)}" style="width:100%;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:var(--bg)"></div></div>
+    <div class="sec"><h3>Atur ulang</h3><p class="hint">Kembalikan ke data awal Okt–Nov 2026. Data sekarang bisa diurungkan sesaat setelahnya.</p>
+      <button type="button" class="btn danger" id="bReset">Atur ulang</button></div>`;
+  idb.keys().then(k => { const e = $('#nPh'); if (e) e.textContent = k.filter(x => String(x).startsWith('L:')).length + ' foto'; }).catch(() => { const e = $('#nPh'); if (e) e.textContent = 'foto tidak tersedia'; });
+  $('#nText').oninput = e => {
+    $('#nState').textContent = 'Menyimpan…'; clearTimeout(noteT);
+    const m = S.period, val = e.target.value;
+    noteT = setTimeout(() => { S.notesM[m] = val; if (!val) delete S.notesM[m]; save(); const st = $('#nState'); if (st) st.textContent = 'Tersimpan otomatis'; }, 400);
+  };
+  $('#nName').onchange = e => { S.name = e.target.value.trim() || DEFAULT_NAME; save(); render(); toast('Nama disimpan'); };
+  $('#bBackup').onclick = backup;
+  $('#bRestore').onchange = e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) restore(f); };
+  $('#bReset').onclick = () => {
+    if (!confirm('Atur ulang ke data awal Okt–Nov 2026?')) return;
+    replaceState(seedState(), 'Data diatur ulang');
+  };
+}
+function flushNote() { const t = $('#nText'); if (t && !$('#v-catatan').hidden) { clearTimeout(noteT); const v = t.value; if (v) S.notesM[S.period] = v; else delete S.notesM[S.period]; save(); } }
+function replaceState(ns, msg) {
+  const prev = JSON.stringify(S);
+  try { localStorage.setItem(KEY + '-sebelum', prev); } catch (e) {}
+  ns.prefs = Object.assign({}, ns.prefs, {tab: S.prefs.tab});
+  S = normalize(ns); save(); render();
+  toast(msg, 'Urungkan', () => { S = normalize(JSON.parse(prev)); save(); render(); toast('Dikembalikan'); }, 9000);
+}
+async function backup() {
+  const msg = $('#bMsg'); msg.textContent = 'Menyiapkan…';
+  try {
+    flushNote();
+    const photos = {}; const ids = new Set(S.days.flatMap(d => d.items.flatMap(i => i.imgs)));
+    let miss = 0;
+    for (const id of ids) { try { const b = await idb.get(id); if (b) photos[id] = await blobToDataURL(b); else miss++; } catch (e) { miss++; } }
+    const data = {app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S, photos};
+    const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+    const name = `activity-log-backup-${today()}.json`;
+    await deliver(blob, name, 'application/json');
+    msg.textContent = `Cadangan dibuat: ${Object.keys(photos).length} foto` + (miss ? `, ${miss} foto tidak ditemukan` : '') + '.';
+  } catch (e) { msg.textContent = 'Gagal mencadangkan: ' + (e.message || e); }
+}
+async function restore(file) {
+  const msg = $('#bMsg'); msg.textContent = 'Membaca file…';
+  try {
+    const data = JSON.parse(await file.text());
+    const st = data && (data.state || data);
+    if (!st || !Array.isArray(st.days)) throw new Error('Bukan file cadangan Activity Log');
+    const n = st.days.reduce((a, d) => a + ((d.items || []).length), 0);
+    if (!confirm(`Pulihkan ${st.days.length} hari dan ${n} aktivitas? Data sekarang diganti (bisa diurungkan sesaat).`)) { msg.textContent = ''; return; }
+    let ok = 0, fail = 0;
+    for (const [id, u] of Object.entries(data.photos || {})) { try { await idb.put(id, dataURLtoBlob(u)); ok++; } catch (e) { fail++; } }
+    replaceState(st, 'Data dipulihkan');
+    const m2 = $('#bMsg'); if (m2) m2.textContent = `Dipulihkan: ${st.days.length} hari, ${n} aktivitas, ${ok} foto` + (fail ? `, ${fail} foto gagal` : '') + '.';
+  } catch (e) { msg.textContent = 'Gagal memulihkan: ' + (e.message || e); }
+}
+async function deliver(blob, name, type) {
+  const file = new File([blob], name, {type});
+  if (navigator.canShare && navigator.share) {
+    try { if (navigator.canShare({files: [file]})) { await navigator.share({files: [file], title: name}); return 'share'; } }
+    catch (e) { if (e && e.name === 'AbortError') return 'abort'; }
+  }
+  const u = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 30000);
+  return 'download';
+}
+
+/* ================= PDF ================= */
+function pdfSafe(s) {
+  return String(s == null ? '' : s).replace(/[‘’‚′]/g, "'").replace(/[“”„″]/g, '"').replace(/[–—−]/g, '-').replace(/…/g, '...')
+    .replace(/[•·]/g, '-').replace(/ /g, ' ').replace(/[^\x09\x0a\x0d\x20-\x7e\xa0-\xff]/g, '');
+}
+function pdfSheet() {
+  const months = allMonths(); if (!months.includes(S.period)) months.push(S.period); months.sort();
+  openSheet(`<h2>Ekspor PDF</h2>
+    <div class="f"><label for="pM">Bulan</label><select id="pM">${months.map(m => `<option value="${m}"${m === S.period ? ' selected' : ''}>${esc(monthName(m))}</option>`).join('')}<option value="all">Semua bulan</option></select></div>
+    <label class="chk"><input type="checkbox" id="pPh"> Sertakan foto</label>
+    <label class="chk"><input type="checkbox" id="pEx" checked> Sertakan kontak &amp; catatan</label>
+    <p class="hint" id="pMsg"></p>
+    <div class="acts" id="pActs"><button type="button" class="btn" id="pCancel">Tutup</button><button type="button" class="btn pri" id="pGo">Buat PDF</button></div>`);
+  $('#pCancel').onclick = () => closeSheet();
+  $('#pGo').onclick = async () => {
+    const msg = $('#pMsg'); const go = $('#pGo'); go.disabled = true; msg.textContent = 'Membuat PDF…';
+    try {
+      const opt = {month: $('#pM').value, photos: $('#pPh').checked, extras: $('#pEx').checked};
+      const {doc, name} = await makePDF(opt, t => { msg.textContent = t; });
+      const blob = doc.output('blob');
+      msg.textContent = `Siap: ${name} (${Math.max(1, Math.round(blob.size / 1024))} KB, ${doc.getNumberOfPages()} hal).`;
+      const canShare = !!(navigator.canShare && navigator.share && navigator.canShare({files: [new File([blob], name, {type: 'application/pdf'})]}));
+      $('#pActs').innerHTML = `<button type="button" class="btn" id="pCancel">Tutup</button>${canShare ? '<button type="button" class="btn" id="pDl">Unduh</button><button type="button" class="btn pri" id="pShare">Bagikan / Simpan</button>' : '<button type="button" class="btn pri" id="pDl">Unduh</button>'}`;
+      $('#pCancel').onclick = () => closeSheet();
+      $('#pDl').onclick = () => { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
+      if ($('#pShare')) $('#pShare').onclick = async () => {
+        try { await navigator.share({files: [new File([blob], name, {type: 'application/pdf'})], title: name}); }
+        catch (e) { if (e.name !== 'AbortError') { msg.textContent = 'Bagikan gagal, pakai Unduh.'; } }
+      };
+    } catch (e) { msg.textContent = 'Gagal membuat PDF: ' + (e.message || e); go.disabled = false; }
+  };
+}
+$('#pdfBtn').onclick = () => {
+  if (!window.jspdf) return toast('Modul PDF belum termuat, coba lagi');
+  pdfSheet();
+};
+function imgSize(u) {
+  return new Promise(res => { const im = new Image(); const t = setTimeout(() => res({w: 4, h: 3}), 3000);
+    im.onload = () => { clearTimeout(t); res({w: im.naturalWidth || 4, h: im.naturalHeight || 3}); };
+    im.onerror = () => { clearTimeout(t); res({w: 4, h: 3}); }; im.src = u; });
+}
+async function makePDF(opt, progress) {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit: 'mm', format: 'a4', compress: true});
+  const W = 210, H = 297, M = 15, CW = W - 2 * M, BOTTOM = H - 16;
+  const T = pdfSafe; let y = M;
+  const all = opt.month === 'all';
+  const months = all ? allMonths() : [opt.month];
+  const perLabel = all ? (months.length ? monthName(months[0]) + ' - ' + monthName(months[months.length - 1]) : 'Semua') : monthName(opt.month);
+  const items = months.flatMap(m => periodDays(m).flatMap(d => d.items));
+  const ensure = h => { if (y + h > BOTTOM) { doc.addPage(); y = M; return true; } return false; };
+  const SC = {'Pending': [120, 119, 116], 'On Progress': [11, 110, 153], 'Done': [15, 123, 108], 'Cancelled': [224, 62, 62]};
+  const ink = () => doc.setTextColor(40, 40, 38);
+  const mute = () => doc.setTextColor(120, 119, 116);
+
+  // Kepala
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); ink(); doc.text('Activity Log', M, y + 6); y += 12;
+  doc.setFontSize(11); doc.text(T(S.name), M, y); y += 5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); mute(); doc.text(ROLE, M, y); y += 5;
+  doc.text(T('Periode: ' + perLabel + '   |   Dibuat: ' + dateLong(today())), M, y); y += 8;
+
+  // Ringkasan status
+  const boxes = [['Total', items.length, [40, 40, 38]], ...STATUS.map(s => [s, items.filter(i => i.st === s).length, SC[s]])];
+  const bw = (CW - 4 * 3) / 5;
+  boxes.forEach(([l, n, c], i) => {
+    const x = M + i * (bw + 3);
+    doc.setDrawColor(225, 225, 222); doc.setFillColor(247, 247, 245); doc.roundedRect(x, y, bw, 16, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...c); doc.text(String(n), x + 4, y + 8);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); mute(); doc.text(l, x + 4, y + 13);
+  });
+  y += 21;
+  const tc = Object.keys(TYPES).map(t => [t, items.filter(i => i.type === t).length]).filter(x => x[1]);
+  if (tc.length) {
+    doc.setFontSize(9); mute();
+    const lines = doc.splitTextToSize(T('Per tipe: ' + tc.map(([t, n]) => `${t} ${TYPES[t]} (${n})`).join(', ')), CW);
+    doc.text(lines, M, y); y += lines.length * 4 + 3;
+  }
+  doc.setDrawColor(225, 225, 222); doc.line(M, y, W - M, y); y += 6;
+
+  for (const m of months) {
+    const days = periodDays(m);
+    if (all) { ensure(16); doc.setFont('helvetica', 'bold'); doc.setFontSize(14); ink(); doc.text(monthName(m), M, y + 4); y += 10; }
+    if (!days.length) { doc.setFont('helvetica', 'italic'); doc.setFontSize(10); mute(); doc.text('Tidak ada aktivitas.', M, y + 3); y += 8; }
+    for (const d of days) {
+      ensure(18);
+      doc.setFillColor(241, 241, 239); doc.roundedRect(M, y, CW, 8, 1.5, 1.5, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); ink(); doc.text(T(dayTitle(d, true)), M + 3, y + 5.5);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); mute(); doc.text(d.items.length + ' aktivitas', W - M - 3, y + 5.5, {align: 'right'});
+      y += 11;
+      for (let k = 0; k < d.items.length; k++) {
+        const it = d.items[k];
+        doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        const lines = doc.splitTextToSize(T(it.text), CW - 8);
+        ensure(5 + lines.length * 4.6 + 2);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); mute();
+        doc.text(T(`${k + 1}.  ${it.type} - ${TYPES[it.type] || it.type}${it.ch ? '  |  ' + it.ch : ''}`), M + 2, y);
+        doc.setTextColor(...(SC[it.st] || SC.Pending)); doc.text(T(it.st), W - M - 2, y, {align: 'right'});
+        y += 4.6;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); ink();
+        for (const ln of lines) { ensure(5); doc.text(ln, M + 6, y); y += 4.6; }
+        if (opt.photos && it.imgs.length) {
+          progress && progress('Memuat foto…');
+          let x = M + 6; const ph = 36; y += 1;
+          let rowH = 0;
+          for (const id of it.imgs) {
+            let b; try { b = await idb.get(id); } catch (e) { b = null; }
+            if (!b) continue;
+            const u = await blobToDataURL(b); const sz = await imgSize(u);
+            let w = ph * sz.w / sz.h; let h = ph; if (w > 56) { w = 56; h = w * sz.h / sz.w; }
+            if (x + w > W - M) { x = M + 6; y += rowH + 2; rowH = 0; }
+            if (ensure(h + 2)) x = M + 6;
+            try { doc.addImage(u, 'JPEG', x, y, w, h, undefined, 'FAST'); } catch (e) {}
+            x += w + 2; rowH = Math.max(rowH, h);
+          }
+          y += rowH + 1;
+        }
+        y += 2.4;
+      }
+      y += 2;
+    }
+    if (opt.extras) {
+      const cs = S.contacts[m] || []; const note = (S.notesM[m] || '').trim();
+      if (cs.length) {
+        ensure(14); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); ink(); doc.text(T('Kontak - ' + monthName(m)), M, y + 3); y += 8;
+        doc.setFontSize(9.5);
+        for (const c of cs) {
+          const line = [c.name, c.org, c.phone, c.email, c.note].filter(Boolean).join('  |  ');
+          const ls = doc.splitTextToSize(T(line), CW - 4); ensure(ls.length * 4.4 + 1);
+          doc.setFont('helvetica', 'normal'); ink(); doc.text(ls, M + 2, y); y += ls.length * 4.4 + 1;
+        }
+        y += 3;
+      }
+      if (note) {
+        ensure(14); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); ink(); doc.text(T('Catatan - ' + monthName(m)), M, y + 3); y += 8;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+        for (const ln of doc.splitTextToSize(T(note), CW - 4)) { ensure(4.6); doc.text(ln, M + 2, y); y += 4.4; }
+        y += 3;
+      }
+    }
+  }
+  const n = doc.getNumberOfPages();
+  for (let p = 1; p <= n; p++) {
+    doc.setPage(p); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); mute();
+    doc.text(T(S.name + ' - Activity Log ' + perLabel), M, H - 8);
+    doc.text(`Hal ${p} / ${n}`, W - M, H - 8, {align: 'right'});
+  }
+  const name = 'Activity-Log_' + (all ? 'Semua' : opt.month) + '.pdf';
+  return {doc, name};
+}
+
+/* ================= Navigasi ================= */
+function setPeriod(m) { if (!isMonth(m)) return; flushNote(); closeSwipe(); S.period = m; save(); render(); window.scrollTo(0, 0); }
+$('#prevM').onclick = () => setPeriod(shiftMonth(S.period, -1));
+$('#nextM').onclick = () => setPeriod(shiftMonth(S.period, 1));
+$('#perIn').onchange = e => setPeriod(e.target.value);
+$('#tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (!b) return; flushNote(); S.prefs.tab = b.dataset.tab; save(); render(); window.scrollTo(0, 0); };
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushNote(); });
+window.addEventListener('pagehide', flushNote);
+
+/* ================= Mulai ================= */
+S = load(); save(); render();
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
