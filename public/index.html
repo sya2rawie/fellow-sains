@@ -139,6 +139,9 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .S-d{color:var(--s-d);background:var(--s-d-bg)}.S-c{color:var(--s-c);background:var(--s-c-bg)}
 .D-p{background:var(--s-p)}.D-o{background:var(--s-o)}.D-d{background:var(--s-d)}.D-c{background:var(--s-c)}
 
+.remind{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--t-EV-bg);color:var(--tx)}
+.remind span{flex:1 1 180px;font-size:14px}
+.remind .btn{min-height:40px}
 .empty{text-align:center;color:var(--tx2);padding:48px 16px}
 .empty p{margin:0 0 14px}
 .foot{display:flex;gap:8px;margin:14px 0}
@@ -240,6 +243,7 @@ textarea.notes:focus{border-color:var(--acc)}
 
 <main class="wrap">
   <section id="v-log">
+    <div id="remind"></div>
     <div class="search">
       <input id="q" type="search" placeholder="Cari aktivitas…" autocomplete="off" enterkeyhint="search">
       <button class="btn" id="copyAll" type="button">Salin semua</button>
@@ -567,7 +571,20 @@ function isOpen(d, shown) {
   if (v != null) return v;
   return d.date === today() || shown.indexOf(d) < 2;
 }
+const DAY_MS = 864e5;
+function renderRemind() {
+  const el = $('#remind'); if (!el) return;
+  const last = S.prefs.lastBackup || 0, snooze = S.prefs.backupSnooze || 0, now = Date.now();
+  const hasData = S.days.some(d => d.items.length);
+  if (!PWA || !hasData || now - last < 7 * DAY_MS || now < snooze) { el.innerHTML = ''; return; }
+  const ago = last ? `Belum dicadangkan ${Math.floor((now - last) / DAY_MS)} hari.` : 'Data belum pernah dicadangkan.';
+  el.innerHTML = `<div class="remind" role="status"><span>${ago} Data hanya ada di HP ini.</span>
+    <button type="button" class="btn ghost" id="rLater">Nanti</button><button type="button" class="btn pri" id="rNow">Cadangkan sekarang</button></div>`;
+  $('#rLater').onclick = () => { S.prefs.backupSnooze = now + DAY_MS; save(); renderRemind(); };
+  $('#rNow').onclick = () => backup();
+}
 function renderLog() {
+  renderRemind();
   const days = periodDays();
   const items = days.flatMap(d => d.items);
   const f = S.prefs.filter || 'all';
@@ -1046,6 +1063,7 @@ function renderNotes() {
   v.innerHTML = `<div class="hint" style="margin-top:14px">Catatan untuk ${esc(monthName(S.period))} · <span id="nState">tersimpan otomatis</span></div>
     ${NOTE_F.map(([k, t]) => `<div class="sec"><h3>${t}</h3><textarea class="notes nf" data-k="${k}" placeholder="Tulis di sini…">${esc(N[k] || '')}</textarea></div>`).join('')}
     <div class="sec"><h3>Data di HP ini</h3>
+      ${PWA ? '<p class="hint" id="safety"></p>' : ''}
       <p class="hint">${S.days.length} hari · ${nItems} aktivitas · <span id="nPh">… foto</span>. ${PWA ? 'Data hanya tersimpan di perangkat ini, jadi cadangkan rutin.' : 'Data tersinkron ke akun Claude-mu; cadangan JSON tetap disarankan sesekali.'}</p>
       <div class="grid2"><button type="button" class="btn" id="bBackup">Cadangkan</button>
       <div class="btn filebtn">Pulihkan<input type="file" id="bRestore" accept="application/json,.json" aria-label="Pulihkan dari file"></div></div>
@@ -1065,6 +1083,7 @@ function renderNotes() {
   });
   $('#nName').onchange = e => { S.name = e.target.value.trim() || DEFAULT_NAME; save(); render(); toast('Nama disimpan'); };
   $('#bBackup').onclick = backup;
+  paintSafety();
   $('#bCopy').onclick = async () => {
     flushNote();
     const ok = await copyText(JSON.stringify({app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S}));
@@ -1104,8 +1123,16 @@ function replaceState(ns, msg) {
   S = normalize(ns); save(); render();
   toast(msg, 'Urungkan', () => { S = normalize(JSON.parse(prev)); save(); render(); toast('Dikembalikan'); }, 9000);
 }
+function paintSafety() {
+  const el = $('#safety'); if (!el) return;
+  const last = S.prefs.lastBackup;
+  const t = last ? 'Cadangan terakhir: ' + dateLong(ymd(new Date(last))) + ` (${Math.floor((Date.now() - last) / DAY_MS)} hari lalu)` : 'Belum pernah dicadangkan';
+  el.textContent = t + ' · Penyimpanan permanen: memeriksa…';
+  const done = p => { if ($('#safety')) $('#safety').textContent = t + ' · Penyimpanan permanen: ' + (p ? 'diizinkan' : 'belum diizinkan (pasang ke layar utama)'); };
+  if (navigator.storage && navigator.storage.persisted) navigator.storage.persisted().then(done).catch(() => done(false)); else done(false);
+}
 async function backup() {
-  const msg = $('#bMsg'); msg.textContent = 'Menyiapkan…';
+  const msg = $('#bMsg') || {}; msg.textContent = 'Menyiapkan…';
   try {
     flushNote();
     const photos = {}; const ids = new Set(S.days.flatMap(d => d.items.flatMap(i => i.imgs)));
@@ -1114,7 +1141,10 @@ async function backup() {
     const data = {app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S, photos};
     const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
     const name = `activity-log-backup-${today()}.json`;
-    await deliver(blob, name, 'application/json');
+    const how = await deliver(blob, name, 'application/json');
+    if (how === 'abort') { msg.textContent = 'Cadangan dibatalkan.'; return; }
+    S.prefs.lastBackup = Date.now(); save(); renderRemind(); paintSafety();
+    toast('Cadangan dibuat');
     msg.textContent = `Cadangan dibuat: ${Object.keys(photos).length} foto` + (miss ? `, ${miss} foto tidak ditemukan` : '') + '.';
   } catch (e) { msg.textContent = 'Gagal mencadangkan: ' + (e.message || e); }
 }
