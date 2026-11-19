@@ -23,7 +23,7 @@
   --s-p:#787774;--s-p-bg:#ebeced;--s-o:#0b6e99;--s-o-bg:#ddebf1;--s-d:#0f7b6c;--s-d-bg:#ddedea;--s-c:#e03e3e;--s-c-bg:#fbe4e4;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#191919;--bg2:#202020;--card:#252525;--line:#2f2f2f;--line2:#3a3a3a;
   --tx:#e6e6e4;--tx2:#9b9b98;--tx3:#6b6b68;
   --acc:#4c9be8;--acc-bg:#1f3347;--red:#ff6b61;--green:#2fb67c;
@@ -33,6 +33,16 @@
   --s-p:#a5a49f;--s-p-bg:#373737;--s-o:#6cb3d4;--s-o-bg:#1e3542;--s-d:#4dbb9f;--s-d-bg:#1d3a33;--s-c:#ff7a70;--s-c-bg:#4a2523;
   color-scheme:dark;
 }}
+:root[data-theme="dark"]{
+  --bg:#191919;--bg2:#202020;--card:#252525;--line:#2f2f2f;--line2:#3a3a3a;
+  --tx:#e6e6e4;--tx2:#9b9b98;--tx3:#6b6b68;
+  --acc:#4c9be8;--acc-bg:#1f3347;--red:#ff6b61;--green:#2fb67c;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.45);
+  --t-ER:#6cb3d4;--t-ER-bg:#1e3542;--t-MC:#a98ad6;--t-MC-bg:#33294a;--t-SM:#e07bb4;--t-SM-bg:#45253a;
+  --t-PR:#ec9a50;--t-PR-bg:#47321e;--t-EV:#dcb84b;--t-EV-bg:#433a1d;--t-AD:#a5a49f;--t-AD-bg:#373737;
+  --s-p:#a5a49f;--s-p-bg:#373737;--s-o:#6cb3d4;--s-o-bg:#1e3542;--s-d:#4dbb9f;--s-d-bg:#1d3a33;--s-c:#ff7a70;--s-c-bg:#4a2523;
+  color-scheme:dark;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--tx)}
 body{font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -129,6 +139,9 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .S-d{color:var(--s-d);background:var(--s-d-bg)}.S-c{color:var(--s-c);background:var(--s-c-bg)}
 .D-p{background:var(--s-p)}.D-o{background:var(--s-o)}.D-d{background:var(--s-d)}.D-c{background:var(--s-c)}
 
+.remind{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--t-EV-bg);color:var(--tx)}
+.remind span{flex:1 1 180px;font-size:14px}
+.remind .btn{min-height:40px}
 .empty{text-align:center;color:var(--tx2);padding:48px 16px}
 .empty p{margin:0 0 14px}
 .foot{display:flex;gap:8px;margin:14px 0}
@@ -230,6 +243,7 @@ textarea.notes:focus{border-color:var(--acc)}
 
 <main class="wrap">
   <section id="v-log">
+    <div id="remind"></div>
     <div class="search">
       <input id="q" type="search" placeholder="Cari aktivitas…" autocomplete="off" enterkeyhint="search">
       <button class="btn" id="copyAll" type="button">Salin semua</button>
@@ -265,8 +279,9 @@ const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus
 const BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 const HR = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-// Data awal Okt–Nov 2026: [tanggal, label, [[tipe, channel, status, teks], ...]]
-const SEED = [["2026-10-01","",[["ER","WhatsApp","Done","Koordinasi awal kerja sama dengan Humas Pemkot terkait agenda Hari Sumpah Pemuda"],["MC","Email","Done","Kirim rilis pers kegiatan seminar ke 12 media mitra"]]],["2026-10-02","",[["SM","","Done","Jadwalkan konten Instagram & TikTok untuk minggu pertama Oktober"],["PR","Luring","Done","Kunjungan silaturahmi ke tokoh masyarakat sekitar kampus"]]],["2026-10-06","",[["EV","Rapat","Done","Rapat panitia persiapan talkshow media"],["AD","Rapat","Done","Rekap laporan mingguan divisi untuk pimpinan"]]],["2026-10-07","",[["MC","WhatsApp","Done","Konfirmasi liputan wartawan Antara dan RRI"]]],["2026-10-08","",[["ER","Email","Done","Kirim surat permohonan audiensi ke Dinas Kominfo"],["SM","","Done","Monitoring insight Instagram dan rangkum performa konten"]]],["2026-10-09","",[["PR","Luring","Done","Pendampingan kegiatan bakti sosial bersama komunitas"],["MC","Luring","Done","Wawancara dengan media lokal tentang program beasiswa"]]],["2026-10-13","",[["EV","WhatsApp","Done","Koordinasi vendor dokumentasi dan publikasi acara"],["ER","Rapat","Done","Audiensi dengan Dinas Kominfo membahas kolaborasi publikasi"]]],["2026-10-14","",[["AD","","Done","Arsip dokumentasi foto kegiatan ke drive bersama"],["SM","","Done","Desain dan unggah infografis capaian program"]]],["2026-10-16","",[["MC","Email","Done","Distribusi rilis audiensi Dinas Kominfo ke media"],["EV","Rapat","Done","Gladi bersih talkshow media"]]],["2026-10-20","",[["EV","Luring","Done","Pelaksanaan talkshow media bersama tiga narasumber"],["MC","WhatsApp","Done","Kirim bahan berita dan foto talkshow ke wartawan"]]],["2026-10-22","",[["SM","","Done","Live report talkshow di Instagram Story"]]],["2026-10-23","",[["ER","WhatsApp","Done","Follow up MoU dengan komunitas literasi digital"],["PR","Luring","Cancelled","Kunjungan ke sekolah mitra untuk sosialisasi program"]]],["2026-10-27","",[["AD","Rapat","Done","Rapat evaluasi talkshow dan pembagian tindak lanjut"],["MC","","Done","Kliping pemberitaan talkshow (8 media online)"]]],["2026-10-29","",[["SM","","Done","Konten peringatan Hari Sumpah Pemuda"],["ER","Email","Done","Undangan media visit ke redaksi harian lokal"]]],["2026-11-02","",[["PR","WhatsApp","Done","Koordinasi relawan kegiatan Sumpah Pemuda"],["EV","Luring","Done","Pelaksanaan kegiatan Sumpah Pemuda bersama komunitas"]]],["2026-11-03","",[["MC","Email","Done","Rilis pers kegiatan Sumpah Pemuda"],["SM","","Done","Rekap performa media sosial bulan Oktober"]]],["2026-11-04","",[["AD","Rapat","Done","Penyusunan laporan bulanan Oktober"],["ER","Luring","Done","Media visit ke redaksi harian lokal"]]],["2026-11-05","",[["ER","Rapat","Done","Rapat koordinasi kerja sama dengan BUMN untuk program CSR"],["MC","WhatsApp","Done","Klarifikasi isu pemberitaan dengan redaksi media online"]]],["2026-11-06","",[["SM","","Done","Kalender konten November disetujui"],["PR","Luring","Done","Diskusi publik bersama karang taruna"]]],["2026-11-09","",[["EV","Rapat","Done","Rapat persiapan Dies Natalis"],["MC","Email","Done","Penyusunan press kit Dies Natalis"]]],["2026-11-10","",[["ER","Email","Done","Kirim proposal sponsorship Dies Natalis ke 5 mitra"]]],["2026-11-11","",[["AD","","Done","Update database kontak media dan mitra"],["SM","","Done","Kampanye countdown Dies Natalis di Instagram"]]],["2026-11-12","",[["ER","WhatsApp","On Progress","Follow up proposal sponsorship ke mitra perbankan"],["MC","Luring","Done","Pendampingan wartawan peliputan kegiatan rektorat"]]],["2026-11-13","",[["PR","Rapat","On Progress","Rapat koordinasi dengan RT/RW terkait acara Dies Natalis"],["EV","WhatsApp","On Progress","Konfirmasi undangan tamu VIP Dies Natalis"]]],["2026-11-16","",[["SM","","On Progress","Produksi video teaser Dies Natalis"],["MC","Email","On Progress","Undangan peliputan Dies Natalis ke media"]]],["2026-11-17","",[["ER","Rapat","On Progress","Audiensi dengan mitra perbankan terkait sponsorship"],["EV","Rapat","On Progress","Technical meeting Dies Natalis dengan seluruh divisi"]]],["2026-11-18","",[["AD","","Pending","Penyusunan anggaran publikasi Desember"],["MC","WhatsApp","Pending","Briefing narasumber untuk wawancara TV lokal"]]],["2026-11-19","",[["SM","","Pending","Balas komentar dan DM terkait pendaftaran acara"],["PR","Luring","Pending","Persiapan donor darah bersama komunitas"]]]];
+// Data awal = salinan data asli per 19 Nov 2026 (dipakai bila belum ada data & untuk "Atur ulang").
+const SEED = {"days": [], "contacts": [], "notesM": {}, "prefs": {"type": "MC", "ch": "WhatsApp"}, "period": "2026-11", "name": "Muhammad Mutawallie Sya'rawie", "updated": 0};
+const PWA = true;
 
 /* ================= Util ================= */
 const $ = s => document.querySelector(s);
@@ -285,7 +300,7 @@ function dateShort(s) { const d = pdate(s); return HR[d.getDay()] + ', ' + d.get
 function dateLong(s) { const d = pdate(s); return HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear(); }
 function dayTitle(d, long) {
   const a = d.date ? (long ? dateLong(d.date) : dateShort(d.date)) : '';
-  if (a && d.label) return a + ' · ' + d.label;
+  if (a && d.label) return d.label + ' · ' + a;
   return a || d.label || 'Tanpa tanggal';
 }
 const stCls = st => SCLS[st] || 'p';
@@ -293,21 +308,20 @@ const typeCls = t => TYPES[t] ? t : 'X';
 
 /* ================= State ================= */
 let S;
-function seedState() {
-  const days = SEED.map(([date, label, items]) => ({
-    id: uid(), label, date, month: date.slice(0, 7),
-    items: items.map(([type, ch, st, text]) => ({id: uid(), text, type, ch, st, imgs: []}))
-  }));
-  return {days, contacts: {}, notesM: {}, prefs: {}, period: '2026-11', name: DEFAULT_NAME};
-}
+function seedState() { const s = JSON.parse(JSON.stringify(SEED)); s.updated = 0; return s; }
 function normalize(s) {
   if (!s || typeof s !== 'object') s = {};
   if (!Array.isArray(s.days)) s.days = [];
   if (!isMonth(s.period)) s.period = curMonth();
-  if (Array.isArray(s.contacts)) s.contacts = {[s.period]: s.contacts};
-  if (!s.contacts || typeof s.contacts !== 'object') s.contacts = {};
+  if (s.contacts && !Array.isArray(s.contacts) && typeof s.contacts === 'object')
+    s.contacts = Object.entries(s.contacts).flatMap(([m, l]) => Array.isArray(l) ? l.map(c => ({...c, m: c.m || m})) : []);
+  if (!Array.isArray(s.contacts)) s.contacts = [];
+  for (const c of s.contacts) { if (!c.id) c.id = uid(); if (!isMonth(c.m)) c.m = s.period; for (const k of ['name','org','inter','topic','follow','deadline']) if (c[k] == null) c[k] = ''; }
   if (!s.notesM || typeof s.notesM !== 'object') s.notesM = {};
-  if (typeof s.notes === 'string' && s.notes && !s.notesM[s.period]) s.notesM[s.period] = s.notes;
+  if (s.notes && !s.notesM[s.period]) s.notesM[s.period] = s.notes;
+  delete s.notes;
+  for (const m in s.notesM) { const n = s.notesM[m]; if (typeof n === 'string') s.notesM[m] = {hl: n, issue: '', fu: ''}; else if (!n || typeof n !== 'object') delete s.notesM[m]; }
+  if (typeof s.updated !== 'number') s.updated = 0;
   if (!s.prefs || typeof s.prefs !== 'object') s.prefs = {};
   if (!s.prefs.open || typeof s.prefs.open !== 'object') s.prefs.open = {};
   if (!s.name) s.name = DEFAULT_NAME;
@@ -329,7 +343,6 @@ function normalize(s) {
       it.type = String(it.type).toUpperCase();
     }
   }
-  for (const m in s.contacts) if (!Array.isArray(s.contacts[m])) delete s.contacts[m];
   return s;
 }
 function load() {
@@ -347,17 +360,46 @@ function load() {
   return normalize(s || seedState());
 }
 let saveErrShown = false;
-function save() {
+function lsSave() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); saveErrShown = false; }
-  catch (e) { if (!saveErrShown) { toast('Gagal menyimpan: penyimpanan penuh. Cadangkan data.'); saveErrShown = true; } }
+  catch (e) { if (!saveErrShown) { toast('Gagal menyimpan di perangkat. Cadangkan data.'); saveErrShown = true; } }
+}
+function save() { S.updated = Date.now(); lsSave(); queuePush(); }
+/* ---- Sinkron ke database artifact Claude (dokumen yang sama dengan versi lama) ---- */
+let remote = null, pushT = 0, assetsNs = null, downloadsNs = null;
+function queuePush() { if (!remote) return; clearTimeout(pushT); pushT = setTimeout(pushRemote, 900); }
+function pushRemote() {
+  if (!remote) return;
+  try { remote.set({json: JSON.stringify(S), updated: S.updated}).catch(() => toast('Gagal sinkron, data tetap tersimpan di HP')); } catch (e) {}
+}
+async function initCloud() {
+  if (!window.claude || !window.claude.use) return;
+  window.claude.use('assets').then(a => { assetsNs = a || null; }).catch(() => {});
+  window.claude.use('downloads').then(a => { downloadsNs = a || null; }).catch(() => {});
+  try {
+    const db = await window.claude.use('db'), user = await window.claude.use('user');
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    const doc = db.doc('data/users/' + id + '/activitylog');
+    const snap = await doc.get();
+    remote = doc;
+    if (snap.exists) {
+      const d = snap.data();
+      if ((d.updated || 0) > (S.updated || 0)) {
+        const r = JSON.parse(d.json);
+        if (r && Array.isArray(r.days)) { const tab = S.prefs.tab; S = normalize(r); if (tab) S.prefs.tab = tab; lsSave(); render(); }
+      } else if ((S.updated || 0) > (d.updated || 0)) pushRemote();
+    } else pushRemote();
+  } catch (e) {}
 }
 const periodDays = (m = S.period) => S.days.filter(d => d.month === m);
 const findDay = id => S.days.find(d => d.id === id);
 function findItem(id) { for (const d of S.days) { const i = d.items.findIndex(x => x.id === id); if (i > -1) return {d, i, it: d.items[i]}; } return null; }
+const hasNote = m => { const n = S.notesM[m]; return !!(n && ((n.hl || '').trim() || (n.issue || '').trim() || (n.fu || '').trim())); };
 function allMonths() {
   const set = new Set(S.days.map(d => d.month));
-  for (const m in S.contacts) if (S.contacts[m].length) set.add(m);
-  for (const m in S.notesM) if ((S.notesM[m] || '').trim()) set.add(m);
+  for (const c of S.contacts) set.add(c.m);
+  for (const m in S.notesM) if (hasNote(m)) set.add(m);
   return [...set].sort();
 }
 
@@ -406,7 +448,9 @@ function toBlob(v) {
   return null;
 }
 const urlCache = new Map();
+const isLocal = id => String(id).startsWith('L:');
 async function photoURL(id) {
+  if (!isLocal(id)) return '/_blob/' + id;
   if (urlCache.has(id)) return urlCache.get(id);
   const b = await idb.get(id);
   if (!b) return null;
@@ -417,7 +461,21 @@ function hydrate(root) {
     try { const u = await photoURL(img.dataset.img); if (u) img.src = u; else img.alt = 'Foto hilang'; } catch (e) {}
   });
 }
+async function getPhotoBlob(id) {
+  if (isLocal(id)) return idb.get(id);
+  const r = await fetch('/_blob/' + id); if (!r.ok) throw new Error('Foto tidak bisa diambil'); return r.blob();
+}
+async function storePhoto(blob) {
+  let note = '';
+  if (assetsNs) {
+    try { const r = await assetsNs.upload(blob); if (r && r.id) return {id: r.id, note}; }
+    catch (e) { note = 'Unggah ke cloud gagal (' + ((e && (e.code || e.message)) || '?') + '), foto disimpan di HP ini saja. '; }
+  }
+  const id = 'L:' + uid(); await idb.put(id, blob);
+  return {id, note};
+}
 async function delPhotos(ids) {
+  ids = ids.filter(isLocal);
   for (const id of ids) { try { await idb.del(id); } catch (e) {} const u = urlCache.get(id); if (u) { URL.revokeObjectURL(u); urlCache.delete(id); } }
 }
 function loadImgEl(file) {
@@ -508,12 +566,25 @@ function matches(it) {
   const hay = (it.text + ' ' + it.type + ' ' + (TYPES[it.type] || '') + ' ' + it.ch + ' ' + it.st).toLowerCase();
   return query.split(/\s+/).every(w => hay.includes(w));
 }
-function isOpen(d, list) {
+function isOpen(d, shown) {
   const v = S.prefs.open[d.id];
   if (v != null) return v;
-  return d.date === today() || d === list[list.length - 1];
+  return d.date === today() || shown.indexOf(d) < 2;
+}
+const DAY_MS = 864e5;
+function renderRemind() {
+  const el = $('#remind'); if (!el) return;
+  const last = S.prefs.lastBackup || 0, snooze = S.prefs.backupSnooze || 0, now = Date.now();
+  const hasData = S.days.some(d => d.items.length);
+  if (!PWA || !hasData || now - last < 7 * DAY_MS || now < snooze) { el.innerHTML = ''; return; }
+  const ago = last ? `Belum dicadangkan ${Math.floor((now - last) / DAY_MS)} hari.` : 'Data belum pernah dicadangkan.';
+  el.innerHTML = `<div class="remind" role="status"><span>${ago} Data hanya ada di HP ini.</span>
+    <button type="button" class="btn ghost" id="rLater">Nanti</button><button type="button" class="btn pri" id="rNow">Cadangkan sekarang</button></div>`;
+  $('#rLater').onclick = () => { S.prefs.backupSnooze = now + DAY_MS; save(); renderRemind(); };
+  $('#rNow').onclick = () => backup();
 }
 function renderLog() {
+  renderRemind();
   const days = periodDays();
   const items = days.flatMap(d => d.items);
   const f = S.prefs.filter || 'all';
@@ -527,11 +598,12 @@ function renderLog() {
   }
   $('#logFoot').hidden = false;
   const fl = filtering(); let shown = 0;
-  const html = days.map(d => {
+  const desc = days.slice().reverse();
+  const html = desc.map(d => {
     const its = d.items.filter(matches);
     if (fl && !its.length) return '';
     shown++;
-    const open = fl || isOpen(d, days);
+    const open = fl || isOpen(d, desc);
     const dots = d.items.map(i => `<span class="dot D-${stCls(i.st)}"></span>`).join('');
     return `<section class="day${open ? '' : ' closed'}" data-day="${d.id}">
       <div class="dhead" data-act="toggle">
@@ -748,7 +820,9 @@ function endDrag() {
   d.line.style.display = 'none';
   suppressUntil = Date.now() + 400;
   const list = periodDays(); const id = d.sec.dataset.day;
-  const order = list.filter(x => x.id !== id); order.splice(d.idx, 0, findDay(id));
+  const shownDesc = list.slice().reverse().filter(x => x.id !== id);
+  shownDesc.splice(d.idx, 0, findDay(id));
+  const order = shownDesc.reverse();
   const changed = order.some((x, i) => x !== list[i]);
   if (changed) {
     const slots = []; S.days.forEach((x, i) => { if (x.month === S.period) slots.push(i); });
@@ -770,14 +844,16 @@ function itemForm({dayId, itemId, afterId, keep}) {
   const ref = itemId ? findItem(itemId) : null;
   const it = ref ? ref.it : null;
   F = {itemId: it ? it.id : null, afterId: afterId || null, dayId: ref ? ref.d.id : (dayId || defaultDayId()),
-       type: it ? it.type : (keep ? keep.type : 'ER'), ch: it ? it.ch : (keep ? keep.ch : ''), st: it ? it.st : 'Pending',
+       type: it ? it.type : (keep ? keep.type : (S.prefs.type || 'MC')), ch: it ? it.ch : (keep ? keep.ch : (S.prefs.ch || '')), st: it ? it.st : 'Done',
        imgs: it ? it.imgs.slice() : [], added: [], removed: []};
   const ds = periodDays();
+  const dateOf = id => { const d = findDay(id); return d ? d.date : (S.period === curMonth() ? today() : ''); };
   const newLabel = S.period === curMonth() ? 'Hari baru (hari ini, ' + dateShort(today()) + ')' : 'Hari baru (tanpa tanggal)';
   const opts = ds.map(d => `<option value="${d.id}"${d.id === F.dayId ? ' selected' : ''}>${esc(dayTitle(d))}</option>`).join('') +
     `<option value="__new"${F.dayId === '__new' ? ' selected' : ''}>${esc(newLabel)}</option>`;
   const sh = openSheet(`
     <h2>${it ? 'Ubah aktivitas' : 'Aktivitas baru'}</h2>
+    <div class="f"><label for="fDate">Tanggal</label><input type="date" id="fDate" value="${esc(dateOf(F.dayId))}"><div class="tdesc">Ganti tanggal untuk memindah ke hari lain, termasuk minggu atau bulan lalu.</div></div>
     <div class="f"><label for="fDay">Hari</label><select id="fDay">${opts}</select></div>
     <div class="f"><label for="fText">Aktivitas</label><textarea id="fText" rows="3" placeholder="Apa yang dikerjakan?">${esc(it ? it.text : '')}</textarea></div>
     <div class="f"><span class="lb">Tipe</span><div class="seg" id="fType">${Object.keys(TYPES).map(t => `<button type="button" data-v="${t}">${t}</button>`).join('')}</div><div class="tdesc" id="fTypeD"></div></div>
@@ -800,6 +876,7 @@ function itemForm({dayId, itemId, afterId, keep}) {
   $('#fType').onclick = e => { const b = e.target.closest('button'); if (b) { F.type = b.dataset.v; paint(); } };
   $('#fCh').onclick = e => { const b = e.target.closest('button'); if (b) { F.ch = F.ch === b.dataset.v ? '' : b.dataset.v; paint(); } };
   $('#fSt').onclick = e => { const b = e.target.closest('button'); if (b) { F.st = b.dataset.v; paint(); } };
+  $('#fDay').onchange = e => { $('#fDate').value = dateOf(e.target.value); };
   $('#fCancel').onclick = () => closeSheet();
   $('#fSave').onclick = () => submitItem(false);
   if ($('#fMore')) $('#fMore').onclick = () => submitItem(true);
@@ -825,8 +902,8 @@ function paintPhotos() {
     for (const f of files) {
       try {
         const blob = await compress(f);
-        const id = 'L:' + uid();
-        await idb.put(id, blob);
+        const {id, note} = await storePhoto(blob);
+        if (note) fails.push(note.trim());
         if (!F) { delPhotos([id]); return; }
         F.imgs.push(id); F.added.push(id);
       } catch (er) { fails.push((f.name || 'foto') + ': ' + (er && er.message ? er.message : er)); }
@@ -840,10 +917,10 @@ function cancelForm() { if (F && F.added.length) delPhotos(F.added); F = null; }
 function submitItem(more) {
   const ta = $('#fText'); const text = ta.value.trim();
   if (!text) { ta.classList.remove('shake'); void ta.offsetWidth; ta.classList.add('shake'); ta.focus(); return; }
-  let dayId = $('#fDay').value;
-  let day;
-  if (dayId === '__new') day = newDay(); else day = findDay(dayId);
-  if (!day) day = newDay();
+  const dayId = $('#fDay').value, dv = $('#fDate').value;
+  let day = dayId === '__new' ? null : findDay(dayId);
+  if (isDate(dv) && (!day || day.date !== dv)) day = dayForDate(dv);
+  else if (!day) day = newDay();
   const data = {text, type: F.type, ch: F.ch, st: F.st, imgs: F.imgs.slice()};
   if (F.itemId) {
     const r = findItem(F.itemId);
@@ -859,14 +936,26 @@ function submitItem(more) {
   if (F.removed.length) delPhotos(F.removed);
   S.prefs.open[day.id] = true;
   const keep = {type: F.type, ch: F.ch};
+  S.prefs.type = F.type; S.prefs.ch = F.ch;
   F = null; save(); closeSheet(true); render();
-  if (more) { itemForm({dayId: day.id, keep}); toast('Tersimpan. Lanjut isi berikutnya'); }
-  else toast('Tersimpan');
+  const where = day.date ? dateShort(day.date) : dayTitle(day);
+  if (more) { if (day.month !== S.period) { S.period = day.month; save(); render(); } itemForm({dayId: day.id, keep}); toast('Tersimpan ke ' + where + '. Lanjut isi berikutnya'); }
+  else if (day.month !== S.period) toast('Tersimpan ke ' + where + ' (' + monthName(day.month) + ')', 'Buka', () => { setPeriod(day.month); setTimeout(() => scrollToDay(day.id), 50); });
+  else { toast('Tersimpan ke ' + where); setTimeout(() => scrollToDay(day.id), 50); }
+}
+// Cari hari bertanggal tsb (bulan apa pun); kalau belum ada, buat dan sisipkan sesuai urutan tanggal.
+function dayForDate(date) {
+  const ex = S.days.find(d => d.date === date); if (ex) return ex;
+  const m = date.slice(0, 7); const d = {id: 'd' + uid(), label: '', date, month: m, items: []};
+  let idx = -1, last = -1;
+  S.days.forEach((x, i) => { if (x.month === m) { last = i; if (idx < 0 && x.date && x.date > date) idx = i; } });
+  if (idx < 0) idx = last >= 0 ? last + 1 : S.days.length;
+  S.days.splice(idx, 0, d); S.prefs.open[d.id] = true; return d;
 }
 function newDay() {
   const isCur = S.period === curMonth();
   if (isCur) { const ex = periodDays().find(d => d.date === today()); if (ex) return ex; }
-  const d = {id: uid(), label: '', date: isCur ? today() : '', month: S.period, items: []};
+  const d = {id: 'd' + uid(), label: 'Hari ' + (periodDays().length + 1), date: isCur ? today() : '', month: S.period, items: []};
   S.days.push(d); return d;
 }
 function addDay() {
@@ -921,45 +1010,47 @@ $('#vp').onclick = () => { V.i = (V.i - 1 + V.ids.length) % V.ids.length; showV(
 $('#vn').onclick = () => { V.i = (V.i + 1) % V.ids.length; showV(); };
 
 /* ================= Kontak ================= */
-const contactsOf = m => S.contacts[m] || (S.contacts[m] = []);
-function waLink(p) { let n = String(p).replace(/[^\d+]/g, '').replace(/^\+/, ''); if (n.startsWith('0')) n = '62' + n.slice(1); return 'https://wa.me/' + n; }
+const contactsOf = m => S.contacts.filter(c => c.m === m);
 function renderContacts() {
-  const list = S.contacts[S.period] || [];
-  const prev = [...allMonths()].reverse().find(m => m < S.period && (S.contacts[m] || []).length);
-  $('#v-kontak').innerHTML = `<div class="sec"><h3>Kontak · ${esc(monthName(S.period))}</h3>
+  const list = contactsOf(S.period);
+  const prev = [...allMonths()].reverse().find(m => m < S.period && contactsOf(m).length);
+  $('#v-kontak').innerHTML = `<div class="sec"><h3>Media &amp; stakeholder · ${esc(monthName(S.period))}</h3>
     ${list.length ? list.map(c => `<div class="ct" data-c="${c.id}"><b>${esc(c.name)}</b>${c.org ? `<small>${esc(c.org)}</small>` : ''}
-      ${c.note ? `<div class="hint">${esc(c.note)}</div>` : ''}
-      <div class="lk">${c.phone ? `<a href="${esc(waLink(c.phone))}" target="_blank" rel="noopener">WhatsApp</a><a href="tel:${esc(c.phone)}">Telepon</a>` : ''}${c.email ? `<a href="mailto:${esc(c.email)}">Email</a>` : ''}</div></div>`).join('')
+      ${c.inter ? `<div class="hint">${esc(c.inter)}</div>` : ''}${c.topic ? `<div class="hint">${esc(c.topic)}</div>` : ''}
+      ${c.deadline ? `<div class="hint">Tenggat: ${esc(c.deadline)}</div>` : ''}
+      ${c.follow === 'Ya' ? '<div class="lk"><span class="st S-o">Perlu tindak lanjut</span></div>' : c.follow === 'Tidak' ? '<div class="lk"><span class="st S-d">Tidak perlu</span></div>' : ''}</div>`).join('')
     : `<div class="empty"><p>Belum ada kontak di bulan ini.</p><button type="button" class="btn pri" id="cAdd">+ Tambah kontak</button>
        ${prev ? `<p style="margin-top:12px"><button type="button" class="btn" id="cCopy">Salin dari ${esc(monthName(prev))}</button></p>` : ''}</div>`}</div>`;
-  const v = $('#v-kontak');
-  v.onclick = e => {
-    if (e.target.closest('a')) return;
+  $('#v-kontak').onclick = e => {
     if (e.target.id === 'cAdd') return contactForm();
-    if (e.target.id === 'cCopy') { S.contacts[S.period] = S.contacts[prev].map(c => ({...c, id: uid()})); save(); renderContacts(); return toast('Kontak disalin'); }
+    if (e.target.id === 'cCopy') { S.contacts.push(...contactsOf(prev).map(c => ({...c, id: uid(), m: S.period}))); save(); renderContacts(); return toast('Kontak disalin'); }
     const c = e.target.closest('[data-c]'); if (c) contactForm(c.dataset.c);
   };
 }
 function contactForm(id) {
-  const list = contactsOf(S.period); const c = id ? list.find(x => x.id === id) : null;
+  const c = id ? S.contacts.find(x => x.id === id) : null;
+  let follow = c ? c.follow : '';
   openSheet(`<h2>${c ? 'Ubah kontak' : 'Kontak baru'}</h2>
-    <div class="f"><label for="cName">Nama</label><input type="text" id="cName" value="${esc(c ? c.name : '')}" autocomplete="off"></div>
-    <div class="f"><label for="cOrg">Instansi / jabatan</label><input type="text" id="cOrg" value="${esc(c ? c.org : '')}"></div>
-    <div class="grid2"><div class="f"><label for="cPhone">No. HP</label><input type="tel" id="cPhone" value="${esc(c ? c.phone : '')}"></div>
-    <div class="f"><label for="cEmail">Email</label><input type="email" id="cEmail" value="${esc(c ? c.email : '')}"></div></div>
-    <div class="f"><label for="cNote">Catatan</label><input type="text" id="cNote" value="${esc(c ? c.note : '')}"></div>
+    <div class="f"><label for="cName">Nama</label><input type="text" id="cName" value="${esc(c ? c.name : '')}" autocomplete="off" placeholder="Contoh: Budi"></div>
+    <div class="f"><label for="cOrg">Instansi / media</label><input type="text" id="cOrg" value="${esc(c ? c.org : '')}" placeholder="Contoh: Dinas Kominfo"></div>
+    <div class="f"><label for="cInter">Jenis interaksi</label><input type="text" id="cInter" value="${esc(c ? c.inter : '')}" placeholder="Rapat, telepon, wawancara…"></div>
+    <div class="f"><label for="cTopic">Topik / isu</label><input type="text" id="cTopic" value="${esc(c ? c.topic : '')}"></div>
+    <div class="f"><span class="lb">Perlu tindak lanjut?</span><div class="seg plain" id="cFol"><button type="button" data-v="Ya">Ya</button><button type="button" data-v="Tidak">Tidak</button><button type="button" data-v="">Belum tahu</button></div></div>
+    <div class="f"><label for="cDead">Tenggat</label><input type="text" id="cDead" value="${esc(c ? c.deadline : '')}" placeholder="Contoh: Jumat"></div>
     <div class="acts">${c ? '<button type="button" class="btn danger" id="cDel">Hapus</button>' : ''}<button type="button" class="btn" id="cCancel">Batal</button><button type="button" class="btn pri" id="cSave">Simpan</button></div>`);
+  const paintF = () => document.querySelectorAll('#cFol button').forEach(b => b.classList.toggle('on', b.dataset.v === follow));
+  paintF(); $('#cFol').onclick = e => { const b = e.target.closest('button'); if (b) { follow = b.dataset.v; paintF(); } };
   if (!c) setTimeout(() => $('#cName') && $('#cName').focus(), 260);
   $('#cCancel').onclick = () => closeSheet();
   $('#cSave').onclick = () => {
     const name = $('#cName').value.trim(); if (!name) { $('#cName').focus(); return; }
-    const data = {name, org: $('#cOrg').value.trim(), phone: $('#cPhone').value.trim(), email: $('#cEmail').value.trim(), note: $('#cNote').value.trim()};
-    if (c) Object.assign(c, data); else list.push({id: uid(), ...data});
+    const data = {name, org: $('#cOrg').value.trim(), inter: $('#cInter').value.trim(), topic: $('#cTopic').value.trim(), follow, deadline: $('#cDead').value.trim()};
+    if (c) Object.assign(c, data); else S.contacts.push({id: uid(), m: S.period, ...data});
     save(); closeSheet(true); render(); toast('Kontak disimpan');
   };
   if ($('#cDel')) $('#cDel').onclick = () => {
-    const i = list.indexOf(c); list.splice(i, 1); save(); closeSheet(true); render();
-    toast('Kontak dihapus', 'Urungkan', () => { list.splice(i, 0, c); save(); render(); });
+    const i = S.contacts.indexOf(c); S.contacts.splice(i, 1); save(); closeSheet(true); render();
+    toast('Kontak dihapus', 'Urungkan', () => { S.contacts.splice(Math.min(i, S.contacts.length), 0, c); save(); render(); });
   };
 }
 
@@ -968,34 +1059,63 @@ let noteT = 0;
 function renderNotes() {
   const v = $('#v-catatan');
   const nItems = S.days.reduce((a, d) => a + d.items.length, 0);
-  v.innerHTML = `<div class="sec"><h3>Catatan · ${esc(monthName(S.period))}</h3>
-    <textarea class="notes" id="nText" placeholder="Catatan bulan ini…">${esc(S.notesM[S.period] || '')}</textarea>
-    <div class="hint" id="nState">Tersimpan otomatis</div></div>
+  const N = S.notesM[S.period] || {};
+  v.innerHTML = `<div class="hint" style="margin-top:14px">Catatan untuk ${esc(monthName(S.period))} · <span id="nState">tersimpan otomatis</span></div>
+    ${NOTE_F.map(([k, t]) => `<div class="sec"><h3>${t}</h3><textarea class="notes nf" data-k="${k}" placeholder="Tulis di sini…">${esc(N[k] || '')}</textarea></div>`).join('')}
     <div class="sec"><h3>Data di HP ini</h3>
-      <p class="hint">${S.days.length} hari · ${nItems} aktivitas · <span id="nPh">… foto</span>. Data hanya tersimpan di perangkat ini, jadi cadangkan rutin.</p>
+      ${PWA ? '<p class="hint" id="safety"></p>' : ''}
+      <p class="hint">${S.days.length} hari · ${nItems} aktivitas · <span id="nPh">… foto</span>. ${PWA ? 'Data hanya tersimpan di perangkat ini, jadi cadangkan rutin.' : 'Data tersinkron ke akun Claude-mu; cadangan JSON tetap disarankan sesekali.'}</p>
       <div class="grid2"><button type="button" class="btn" id="bBackup">Cadangkan</button>
       <div class="btn filebtn">Pulihkan<input type="file" id="bRestore" accept="application/json,.json" aria-label="Pulihkan dari file"></div></div>
+      <div class="grid2" style="margin-top:8px"><button type="button" class="btn" id="bCopy">Salin kode data</button><button type="button" class="btn" id="bPaste">Tempel kode data</button></div>
+      <p class="hint">Pindah ke HP/aplikasi lain tanpa file: tap Salin kode data di sini, lalu Tempel kode data di sana. Foto tidak ikut.</p>
       <p class="hint" id="bMsg"></p>
     </div>
     <div class="sec"><h3>Nama di header & PDF</h3>
       <div class="f"><input type="text" id="nName" value="${esc(S.name)}" style="width:100%;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:var(--bg)"></div></div>
-    <div class="sec"><h3>Atur ulang</h3><p class="hint">Kembalikan ke data awal Okt–Nov 2026. Data sekarang bisa diurungkan sesaat setelahnya.</p>
+    <div class="sec"><h3>Arti kode tipe</h3>${Object.entries(TYPES).map(([k, t]) => `<div class="hint"><span class="tag T-${k}" style="display:inline-flex;align-items:center;min-height:24px">${k}</span> ${esc(t)}</div>`).join('')}</div>
+    <div class="sec"><h3>Atur ulang</h3><p class="hint">Kembalikan ke data awal (${SEED.days.length} hari, ${SEED.days.reduce((a, d) => a + d.items.length, 0)} aktivitas). Data sekarang bisa diurungkan sesaat setelahnya.</p>
       <button type="button" class="btn danger" id="bReset">Atur ulang</button></div>`;
-  idb.keys().then(k => { const e = $('#nPh'); if (e) e.textContent = k.filter(x => String(x).startsWith('L:')).length + ' foto'; }).catch(() => { const e = $('#nPh'); if (e) e.textContent = 'foto tidak tersedia'; });
-  $('#nText').oninput = e => {
-    $('#nState').textContent = 'Menyimpan…'; clearTimeout(noteT);
-    const m = S.period, val = e.target.value;
-    noteT = setTimeout(() => { S.notesM[m] = val; if (!val) delete S.notesM[m]; save(); const st = $('#nState'); if (st) st.textContent = 'Tersimpan otomatis'; }, 400);
-  };
+  { const e = $('#nPh'); if (e) e.textContent = S.days.reduce((a, d) => a + d.items.reduce((b, i) => b + i.imgs.length, 0), 0) + ' foto'; }
+  v.querySelectorAll('.nf').forEach(t => t.oninput = () => {
+    $('#nState').textContent = 'menyimpan…'; clearTimeout(noteT);
+    noteT = setTimeout(() => { flushNote(); const st = $('#nState'); if (st) st.textContent = 'tersimpan otomatis'; }, 400);
+  });
   $('#nName').onchange = e => { S.name = e.target.value.trim() || DEFAULT_NAME; save(); render(); toast('Nama disimpan'); };
   $('#bBackup').onclick = backup;
+  paintSafety();
+  $('#bCopy').onclick = async () => {
+    flushNote();
+    const ok = await copyText(JSON.stringify({app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S}));
+    $('#bMsg').textContent = ok ? `Kode data tersalin (${S.days.length} hari, ${S.days.reduce((a, d) => a + d.items.length, 0)} aktivitas). Buka aplikasi tujuan → Catatan → Tempel kode data.` : 'Gagal menyalin.';
+  };
+  $('#bPaste').onclick = () => {
+    openSheet(`<h2>Tempel kode data</h2><div class="f"><textarea id="pasteTa" rows="6" placeholder="Tempel kode data di sini"></textarea></div>
+      <p class="hint">Data di aplikasi ini akan diganti (bisa diurungkan sesaat).</p>
+      <div class="acts"><button type="button" class="btn" id="pCancel2">Batal</button><button type="button" class="btn pri" id="pGo2">Pulihkan</button></div>`);
+    $('#pCancel2').onclick = () => closeSheet();
+    $('#pGo2').onclick = async () => {
+      const t = $('#pasteTa').value.trim(); if (!t) return $('#pasteTa').focus();
+      let data; try { data = JSON.parse(t); } catch (e) { toast('Kode tidak lengkap atau rusak, salin ulang'); return; }
+      closeSheet(true); await restoreData(data);
+    };
+  };
   $('#bRestore').onchange = e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) restore(f); };
   $('#bReset').onclick = () => {
-    if (!confirm('Atur ulang ke data awal Okt–Nov 2026?')) return;
+    if (!confirm('Atur ulang ke data awal?')) return;
     replaceState(seedState(), 'Data diatur ulang');
   };
 }
-function flushNote() { const t = $('#nText'); if (t && !$('#v-catatan').hidden) { clearTimeout(noteT); const v = t.value; if (v) S.notesM[S.period] = v; else delete S.notesM[S.period]; save(); } }
+const NOTE_F = [['hl', 'Highlight'], ['issue', 'Kendala / isu'], ['fu', 'Tindak lanjut']];
+function flushNote() {
+  const ts = document.querySelectorAll('#v-catatan .nf'); if (!ts.length || $('#v-catatan').hidden) return;
+  clearTimeout(noteT);
+  const old = S.notesM[S.period] || {}; const n = {hl: '', issue: '', fu: ''};
+  ts.forEach(t => { n[t.dataset.k] = t.value; });
+  if (n.hl === (old.hl || '') && n.issue === (old.issue || '') && n.fu === (old.fu || '')) return;
+  if (n.hl || n.issue || n.fu) S.notesM[S.period] = n; else delete S.notesM[S.period];
+  save();
+}
 function replaceState(ns, msg) {
   const prev = JSON.stringify(S);
   try { localStorage.setItem(KEY + '-sebelum', prev); } catch (e) {}
@@ -1003,37 +1123,54 @@ function replaceState(ns, msg) {
   S = normalize(ns); save(); render();
   toast(msg, 'Urungkan', () => { S = normalize(JSON.parse(prev)); save(); render(); toast('Dikembalikan'); }, 9000);
 }
+function paintSafety() {
+  const el = $('#safety'); if (!el) return;
+  const last = S.prefs.lastBackup;
+  const t = last ? 'Cadangan terakhir: ' + dateLong(ymd(new Date(last))) + ` (${Math.floor((Date.now() - last) / DAY_MS)} hari lalu)` : 'Belum pernah dicadangkan';
+  el.textContent = t + ' · Penyimpanan permanen: memeriksa…';
+  const done = p => { if ($('#safety')) $('#safety').textContent = t + ' · Penyimpanan permanen: ' + (p ? 'diizinkan' : 'belum diizinkan (pasang ke layar utama)'); };
+  if (navigator.storage && navigator.storage.persisted) navigator.storage.persisted().then(done).catch(() => done(false)); else done(false);
+}
 async function backup() {
-  const msg = $('#bMsg'); msg.textContent = 'Menyiapkan…';
+  const msg = $('#bMsg') || {}; msg.textContent = 'Menyiapkan…';
   try {
     flushNote();
     const photos = {}; const ids = new Set(S.days.flatMap(d => d.items.flatMap(i => i.imgs)));
     let miss = 0;
-    for (const id of ids) { try { const b = await idb.get(id); if (b) photos[id] = await blobToDataURL(b); else miss++; } catch (e) { miss++; } }
+    for (const id of ids) { try { const b = await getPhotoBlob(id); if (b) photos[id] = await blobToDataURL(b); else miss++; } catch (e) { miss++; } }
     const data = {app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S, photos};
     const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
     const name = `activity-log-backup-${today()}.json`;
-    await deliver(blob, name, 'application/json');
+    const how = await deliver(blob, name, 'application/json');
+    if (how === 'abort') { msg.textContent = 'Cadangan dibatalkan.'; return; }
+    S.prefs.lastBackup = Date.now(); save(); renderRemind(); paintSafety();
+    toast('Cadangan dibuat');
     msg.textContent = `Cadangan dibuat: ${Object.keys(photos).length} foto` + (miss ? `, ${miss} foto tidak ditemukan` : '') + '.';
   } catch (e) { msg.textContent = 'Gagal mencadangkan: ' + (e.message || e); }
 }
 async function restore(file) {
   const msg = $('#bMsg'); msg.textContent = 'Membaca file…';
+  let data; try { data = JSON.parse(await file.text()); } catch (e) { msg.textContent = 'Gagal memulihkan: file rusak'; return; }
+  return restoreData(data);
+}
+async function restoreData(data) {
+  const msg = $('#bMsg') || {};
   try {
-    const data = JSON.parse(await file.text());
     const st = [data && data.state, data && data.data, data].find(x => x && Array.isArray(x.days));
     if (!st) throw new Error('Bukan file cadangan Activity Log');
     const n = st.days.reduce((a, d) => a + ((d.items || []).length), 0);
     if (!confirm(`Pulihkan ${st.days.length} hari dan ${n} aktivitas? Data sekarang diganti (bisa diurungkan sesaat).`)) { msg.textContent = ''; return; }
+    st.updated = Date.now();
     let ok = 0, fail = 0;
     const ph = data.photos || data.imgs || data.images || {};
     const pairs = Array.isArray(ph) ? ph.map(p => [p.id || p.key, p.data || p.dataURL || p.src || p.blob]) : Object.entries(ph);
-    for (const [id, u] of pairs) { try { const b = toBlob(u); if (!id || !b) throw 0; await idb.put(id, b); ok++; } catch (e) { fail++; } }
+    for (const [id, u] of pairs) { try { const b = toBlob(u); if (!id || !b) throw 0; if (isLocal(id)) await idb.put(id, b); ok++; } catch (e) { fail++; } }
     replaceState(st, 'Data dipulihkan');
     const m2 = $('#bMsg'); if (m2) m2.textContent = `Dipulihkan: ${st.days.length} hari, ${n} aktivitas, ${ok} foto` + (fail ? `, ${fail} foto gagal` : '') + '.';
   } catch (e) { msg.textContent = 'Gagal memulihkan: ' + (e.message || e); }
 }
 async function deliver(blob, name, type) {
+  if (downloadsNs) { try { await downloadsNs.save({filename: name, data: blob}); return 'save'; } catch (e) { if (e && (e.code === 'declined' || e.name === 'AbortError')) return 'abort'; } }
   const file = new File([blob], name, {type});
   if (navigator.canShare && navigator.share) {
     try { if (navigator.canShare({files: [file]})) { await navigator.share({files: [file], title: name}); return 'share'; } }
@@ -1066,10 +1203,12 @@ function pdfSheet() {
       const {doc, name} = await makePDF(opt, t => { msg.textContent = t; });
       const blob = doc.output('blob');
       msg.textContent = `Siap: ${name} (${Math.max(1, Math.round(blob.size / 1024))} KB, ${doc.getNumberOfPages()} hal).`;
-      const canShare = !!(navigator.canShare && navigator.share && navigator.canShare({files: [new File([blob], name, {type: 'application/pdf'})]}));
-      $('#pActs').innerHTML = `<button type="button" class="btn" id="pCancel">Tutup</button>${canShare ? '<button type="button" class="btn" id="pDl">Unduh</button><button type="button" class="btn pri" id="pShare">Bagikan / Simpan</button>' : '<button type="button" class="btn pri" id="pDl">Unduh</button>'}`;
+      const canShare = !downloadsNs && !!(navigator.canShare && navigator.share && navigator.canShare({files: [new File([blob], name, {type: 'application/pdf'})]}));
+      $('#pActs').innerHTML = `<button type="button" class="btn" id="pCancel">Tutup</button>${canShare ? '<button type="button" class="btn" id="pDl">Unduh</button><button type="button" class="btn pri" id="pShare">Bagikan / Simpan</button>' : '<button type="button" class="btn pri" id="pDl">Simpan PDF</button>'}`;
       $('#pCancel').onclick = () => closeSheet();
-      $('#pDl').onclick = () => { const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
+      $('#pDl').onclick = async () => {
+        if (downloadsNs) { try { await downloadsNs.save({filename: name, data: blob}); msg.textContent = 'PDF tersimpan.'; } catch (e) { if (!(e && e.code === 'declined')) msg.textContent = 'Gagal menyimpan: ' + ((e && (e.code || e.message)) || e); } return; }
+        const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000); };
       if ($('#pShare')) $('#pShare').onclick = async () => {
         try { await navigator.share({files: [new File([blob], name, {type: 'application/pdf'})], title: name}); }
         catch (e) { if (e.name !== 'AbortError') { msg.textContent = 'Bagikan gagal, pakai Unduh.'; } }
@@ -1150,7 +1289,7 @@ async function makePDF(opt, progress) {
           let x = M + 6; const ph = 36; y += 1;
           let rowH = 0;
           for (const id of it.imgs) {
-            let b; try { b = await idb.get(id); } catch (e) { b = null; }
+            let b; try { b = await getPhotoBlob(id); } catch (e) { b = null; }
             if (!b) continue;
             const u = await blobToDataURL(b); const sz = await imgSize(u);
             let w = ph * sz.w / sz.h; let h = ph; if (w > 56) { w = 56; h = w * sz.h / sz.w; }
@@ -1166,22 +1305,27 @@ async function makePDF(opt, progress) {
       y += 2;
     }
     if (opt.extras) {
-      const cs = S.contacts[m] || []; const note = (S.notesM[m] || '').trim();
+      const cs = contactsOf(m); const N = S.notesM[m] || {};
       if (cs.length) {
         ensure(14); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); ink(); doc.text(T('Kontak - ' + monthName(m)), M, y + 3); y += 8;
         doc.setFontSize(9.5);
         for (const c of cs) {
-          const line = [c.name, c.org, c.phone, c.email, c.note].filter(Boolean).join('  |  ');
+          const line = [c.name + (c.org ? ' - ' + c.org : ''), c.inter, c.topic, c.follow ? 'Tindak lanjut: ' + c.follow : '', c.deadline ? 'Tenggat: ' + c.deadline : ''].filter(Boolean).join('  |  ');
           const ls = doc.splitTextToSize(T(line), CW - 4); ensure(ls.length * 4.4 + 1);
           doc.setFont('helvetica', 'normal'); ink(); doc.text(ls, M + 2, y); y += ls.length * 4.4 + 1;
         }
         y += 3;
       }
-      if (note) {
+      if (hasNote(m)) {
         ensure(14); doc.setFont('helvetica', 'bold'); doc.setFontSize(11); ink(); doc.text(T('Catatan - ' + monthName(m)), M, y + 3); y += 8;
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
-        for (const ln of doc.splitTextToSize(T(note), CW - 4)) { ensure(4.6); doc.text(ln, M + 2, y); y += 4.4; }
-        y += 3;
+        for (const [k, t] of NOTE_F) {
+          const val = (N[k] || '').trim(); if (!val) continue;
+          ensure(10); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); mute(); doc.text(t, M + 2, y); y += 4.2;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); ink();
+          for (const ln of doc.splitTextToSize(T(val), CW - 4)) { ensure(4.6); doc.text(ln, M + 2, y); y += 4.4; }
+          y += 2;
+        }
+        y += 1;
       }
     }
   }
@@ -1205,9 +1349,10 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) flush
 window.addEventListener('pagehide', flushNote);
 
 /* ================= Mulai ================= */
-S = load(); save(); render();
+S = load(); lsSave(); render();
+initCloud();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+if (PWA && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 </script>
