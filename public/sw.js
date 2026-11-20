@@ -1,5 +1,5 @@
 // Naikkan versi CACHE setiap rilis agar HP mengambil versi baru.
-const CACHE = 'activity-log-v6';
+const CACHE = 'activity-log-v7';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './jspdf.umd.min.js',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
@@ -15,7 +15,11 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   if (req.mode === 'navigate') {
-    e.respondWith(caches.match('./index.html').then(r => r || fetch(req)));
+    // Online: selalu ambil versi terbaru (lalu simpan); offline: pakai salinan.
+    e.respondWith(fetch(req, {cache: 'no-store'}).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); }
+      return res;
+    }).catch(() => caches.match('./index.html')));
     return;
   }
   e.respondWith(caches.match(req, {ignoreSearch: true}).then(r => r || fetch(req).then(res => {
