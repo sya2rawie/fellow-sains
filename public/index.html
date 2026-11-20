@@ -282,6 +282,7 @@ const HR = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 // Data awal = salinan data asli per 19 Nov 2026 (dipakai bila belum ada data & untuk "Atur ulang").
 const SEED = {"days": [], "contacts": [], "notesM": {}, "prefs": {"type": "MC", "ch": "WhatsApp"}, "period": "2026-11", "name": "Muhammad Mutawallie Sya'rawie", "updated": 0};
 const PWA = true;
+const APP_VERSION = 'v7 · 20 Nov 2026';
 
 /* ================= Util ================= */
 const $ = s => document.querySelector(s);
@@ -1085,7 +1086,8 @@ function renderNotes() {
       <div class="f"><input type="text" id="nName" value="${esc(S.name)}" style="width:100%;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:var(--bg)"></div></div>
     <div class="sec"><h3>Arti kode tipe</h3>${Object.entries(TYPES).map(([k, t]) => `<div class="hint"><span class="tag T-${k}" style="display:inline-flex;align-items:center;min-height:24px">${k}</span> ${esc(t)}</div>`).join('')}</div>
     <div class="sec"><h3>Atur ulang</h3><p class="hint">Kembalikan ke data awal (${SEED.days.length} hari, ${SEED.days.reduce((a, d) => a + d.items.length, 0)} aktivitas). Data sekarang bisa diurungkan sesaat setelahnya.</p>
-      <button type="button" class="btn danger" id="bReset">Atur ulang</button></div>`;
+      <button type="button" class="btn danger" id="bReset">Atur ulang</button></div>
+    <p class="hint" style="text-align:center;margin:24px 0 8px">Versi aplikasi: ${APP_VERSION}</p>`;
   { const e = $('#nPh'); if (e) e.textContent = S.days.reduce((a, d) => a + d.items.reduce((b, i) => b + i.imgs.length, 0), 0) + ' foto'; }
   v.querySelectorAll('.nf').forEach(t => t.oninput = () => {
     $('#nState').textContent = 'menyimpan…'; clearTimeout(noteT);
@@ -1512,7 +1514,9 @@ if (PWA && gdClientId()) loadGis().catch(() => {});
 initCloud();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if (PWA && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  const hadCtrl = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadCtrl && !reloaded) { reloaded = true; flushNote(); location.reload(); } });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(r => r.update()).catch(() => {}));
 }
 </script>
 </body>
