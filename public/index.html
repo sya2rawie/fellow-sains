@@ -364,7 +364,7 @@ function lsSave() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); saveErrShown = false; }
   catch (e) { if (!saveErrShown) { toast('Gagal menyimpan di perangkat. Cadangkan data.'); saveErrShown = true; } }
 }
-function save() { S.updated = Date.now(); lsSave(); queuePush(); }
+function save() { S.updated = Date.now(); lsSave(); queuePush(); gdQueue(); }
 /* ---- Sinkron ke database artifact Claude (dokumen yang sama dengan versi lama) ---- */
 let remote = null, pushT = 0, assetsNs = null, downloadsNs = null;
 function queuePush() { if (!remote) return; clearTimeout(pushT); pushT = setTimeout(pushRemote, 900); }
@@ -576,6 +576,15 @@ function renderRemind() {
   const el = $('#remind'); if (!el) return;
   const last = S.prefs.lastBackup || 0, snooze = S.prefs.backupSnooze || 0, now = Date.now();
   const hasData = S.days.some(d => d.items.length);
+  if (PWA && hasData && S.prefs.gdConnected && gdClientId()) {
+    const gl = S.prefs.gdLast || 0;
+    if (now - gl < DAY_MS || now < snooze || GD.ok()) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="remind" role="status"><span>${gl ? 'Sinkron Google Drive terakhir ' + Math.floor((now - gl) / DAY_MS) + ' hari lalu.' : 'Belum sinkron ke Google Drive.'}</span>
+      <button type="button" class="btn ghost" id="rLater">Nanti</button><button type="button" class="btn pri" id="rNow">Sinkron Drive</button></div>`;
+    $('#rLater').onclick = () => { S.prefs.backupSnooze = now + DAY_MS; save(); renderRemind(); };
+    $('#rNow').onclick = () => gdSyncNow();
+    return;
+  }
   if (!PWA || !hasData || now - last < 7 * DAY_MS || now < snooze) { el.innerHTML = ''; return; }
   const ago = last ? `Belum dicadangkan ${Math.floor((now - last) / DAY_MS)} hari.` : 'Data belum pernah dicadangkan.';
   el.innerHTML = `<div class="remind" role="status"><span>${ago} Data hanya ada di HP ini.</span>
@@ -1071,6 +1080,7 @@ function renderNotes() {
       <p class="hint">Pindah ke HP/aplikasi lain tanpa file: tap Salin kode data di sini, lalu Tempel kode data di sana. Foto tidak ikut.</p>
       <p class="hint" id="bMsg"></p>
     </div>
+    ${PWA ? `<div class="sec" id="gdSec"><h3>Backup Google Drive</h3><div id="gdBox"></div><p class="hint" id="gdMsg"></p></div>` : ''}
     <div class="sec"><h3>Nama di header & PDF</h3>
       <div class="f"><input type="text" id="nName" value="${esc(S.name)}" style="width:100%;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:var(--bg)"></div></div>
     <div class="sec"><h3>Arti kode tipe</h3>${Object.entries(TYPES).map(([k, t]) => `<div class="hint"><span class="tag T-${k}" style="display:inline-flex;align-items:center;min-height:24px">${k}</span> ${esc(t)}</div>`).join('')}</div>
@@ -1083,7 +1093,7 @@ function renderNotes() {
   });
   $('#nName').onchange = e => { S.name = e.target.value.trim() || DEFAULT_NAME; save(); render(); toast('Nama disimpan'); };
   $('#bBackup').onclick = backup;
-  paintSafety();
+  paintSafety(); paintGd();
   $('#bCopy').onclick = async () => {
     flushNote();
     const ok = await copyText(JSON.stringify({app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S}));
@@ -1116,10 +1126,157 @@ function flushNote() {
   if (n.hl || n.issue || n.fu) S.notesM[S.period] = n; else delete S.notesM[S.period];
   save();
 }
+/* ================= Google Drive (hanya versi Netlify) =================
+   Izin drive.file: aplikasi hanya bisa melihat file/folder yang dibuatnya sendiri. */
+const GD_CLIENT_ID = '';            // boleh diisi permanen; kalau kosong, diisi lewat tab Catatan
+const GD_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const GD_API = 'https://www.googleapis.com/drive/v3/files', GD_UP = 'https://www.googleapis.com/upload/drive/v3/files';
+const GD = {token: null, exp: 0, busy: false, again: false, t: 0, ok() { return !!this.token && Date.now() < this.exp - 60000; }};
+const gdClientId = () => (S.prefs.gdClientId || GD_CLIENT_ID || '').trim();
+function gdMsg(t) { const e = $('#gdMsg'); if (e) e.textContent = t; }
+function loadGis() {
+  if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  if (loadGis.p) return loadGis.p;
+  return (loadGis.p = new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+    sc.onload = () => res(); sc.onerror = () => { loadGis.p = null; rej(new Error('Gagal memuat login Google. Cek internet.')); };
+    document.head.appendChild(sc);
+  }));
+}
+// Harus dipanggil langsung dari tap (tanpa await sebelumnya) supaya popup login tidak diblokir.
+function gdLogin() {
+  return new Promise((res, rej) => {
+    if (!gdClientId()) return rej(new Error('Isi Client ID dulu'));
+    if (!(window.google && google.accounts && google.accounts.oauth2)) { loadGis().catch(() => {}); return rej(new Error('Menyiapkan login Google… tap sekali lagi.')); }
+    const c = google.accounts.oauth2.initTokenClient({
+      client_id: gdClientId(), scope: GD_SCOPE, prompt: S.prefs.gdConnected ? '' : 'consent',
+      callback: r => {
+        if (r.error) return rej(new Error(r.error === 'access_denied' ? 'Akses ditolak' : r.error));
+        GD.token = r.access_token; GD.exp = Date.now() + (r.expires_in || 3600) * 1000;
+        if (!S.prefs.gdConnected) { S.prefs.gdConnected = true; save(); }
+        res(GD.token);
+      },
+      error_callback: e => rej(new Error(e && e.type === 'popup_closed' ? 'Login dibatalkan' : e && e.type === 'popup_failed_to_open' ? 'Popup login diblokir browser' : 'Login Google gagal'))
+    });
+    c.requestAccessToken();
+  });
+}
+async function gdFetch(url, opt = {}) {
+  if (!GD.ok()) throw new Error('Sesi Google habis, tap Sinkron sekarang');
+  const r = await fetch(url, {...opt, headers: {...(opt.headers || {}), Authorization: 'Bearer ' + GD.token}});
+  if (r.status === 401) { GD.token = null; throw new Error('Sesi Google habis, tap Sinkron sekarang'); }
+  if (!r.ok) { const t = await r.text().catch(() => ''); const e = new Error('Drive ' + r.status + ': ' + t.slice(0, 140)); e.status = r.status; throw e; }
+  return r;
+}
+async function gdFind(name, parent, folder) {
+  const q = `name='${name.replace(/'/g, "\\'")}' and trashed=false` + (folder ? " and mimeType='application/vnd.google-apps.folder'" : '') + (parent ? ` and '${parent}' in parents` : '');
+  const r = await (await gdFetch(GD_API + '?spaces=drive&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&q=' + encodeURIComponent(q))).json();
+  return (r.files || [])[0] || null;
+}
+async function gdFolder(name, parent) {
+  const f = await gdFind(name, parent, true); if (f) return f.id;
+  const body = {name, mimeType: 'application/vnd.google-apps.folder'}; if (parent) body.parents = [parent];
+  return (await (await gdFetch(GD_API + '?fields=id', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})).json()).id;
+}
+async function gdUpload(name, blob, parent, fileId) {
+  const meta = fileId ? {name} : {name, parents: [parent]};
+  const fd = new FormData();
+  fd.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
+  fd.append('file', blob, name);
+  const url = (fileId ? GD_UP + '/' + fileId : GD_UP) + '?uploadType=multipart&fields=id';
+  return (await (await gdFetch(url, {method: fileId ? 'PATCH' : 'POST', body: fd})).json()).id;
+}
+const slug = t => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'foto';
+async function gdSync() {
+  if (GD.busy) { GD.again = true; return; }
+  GD.busy = true; gdMsg('Menyinkron ke Google Drive…');
+  try {
+    flushNote();
+    const root = S.prefs.gdFolder || (S.prefs.gdFolder = await gdFolder('Activity Log'));
+    const phf = S.prefs.gdPhotoFolder || (S.prefs.gdPhotoFolder = await gdFolder('Foto', root));
+    const map = S.prefs.gdPhotos || (S.prefs.gdPhotos = {});
+    let up = 0, miss = 0;
+    for (const d of S.days) for (const it of d.items) for (let k = 0; k < it.imgs.length; k++) {
+      const id = it.imgs[k]; if (map[id]) continue;
+      let b = null; try { b = await getPhotoBlob(id); } catch (e) {}
+      if (!b) { miss++; continue; }
+      gdMsg(`Mengunggah foto ${up + 1}…`);
+      map[id] = await gdUpload(`${d.date || d.month}_${slug(it.text)}_${k + 1}.jpg`, b, phf);
+      up++;
+    }
+    const json = new Blob([JSON.stringify({app: 'activity-log', v: 1, exported: new Date().toISOString(), state: S})], {type: 'application/json'});
+    try { S.prefs.gdDataId = await gdUpload('activity-log-data.json', json, root, S.prefs.gdDataId || null); }
+    catch (e) { if (e.status === 404 && S.prefs.gdDataId) S.prefs.gdDataId = await gdUpload('activity-log-data.json', json, root, null); else throw e; }
+    if (S.prefs.gdLastSnap !== today()) { await gdUpload(`activity-log-${today()}.json`, json, root, null); S.prefs.gdLastSnap = today(); }
+    S.prefs.gdLast = S.prefs.lastBackup = Date.now(); lsSave();
+    gdMsg(`Tersinkron ${new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})}` + (up ? ` · ${up} foto baru` : '') + (miss ? ` · ${miss} foto tidak ditemukan di HP` : '') + '.');
+    renderRemind(); paintGd(true); paintSafety();
+  } catch (e) {
+    if (/folder|404/i.test(e.message || '') && e.status === 404) { S.prefs.gdFolder = S.prefs.gdPhotoFolder = null; }
+    gdMsg('Sinkron gagal: ' + (e.message || e)); lsSave();
+  } finally {
+    GD.busy = false; if (GD.again) { GD.again = false; gdQueue(); }
+  }
+}
+// Setelah setiap perubahan: sinkron otomatis kalau sesi Google masih aktif (±1 jam setelah login).
+function gdQueue() { if (!PWA || !GD.ok()) return; clearTimeout(GD.t); GD.t = setTimeout(gdSync, 3000); }
+function gdSyncNow() {
+  gdLogin().then(gdSync).catch(e => { gdMsg(e.message || String(e)); toast(e.message || 'Login Google gagal'); });
+}
+function gdRestoreNow() {
+  gdLogin().then(async () => {
+    gdMsg('Mencari cadangan di Drive…');
+    const root = S.prefs.gdFolder || await gdFolder('Activity Log'); S.prefs.gdFolder = root;
+    const f = await gdFind('activity-log-data.json', root, false);
+    if (!f) { gdMsg('Belum ada cadangan di Drive.'); return; }
+    const data = await (await gdFetch(GD_API + '/' + f.id + '?alt=media')).json();
+    S.prefs.gdDataId = f.id;
+    if (!(await restoreData(data))) { gdMsg('Dibatalkan.'); return; }
+    const map = (S.prefs.gdPhotos) || {}; let got = 0, fail = 0;
+    for (const [lid, did] of Object.entries(map)) {
+      if (!isLocal(lid)) continue;
+      try { if (await idb.get(lid)) continue; } catch (e) {}
+      try { gdMsg(`Mengunduh foto ${got + 1}…`); await idb.put(lid, await (await gdFetch(GD_API + '/' + did + '?alt=media')).blob()); got++; } catch (e) { fail++; }
+    }
+    render();
+    gdMsg(`Dipulihkan dari Drive` + (got ? ` · ${got} foto` : '') + (fail ? ` · ${fail} foto gagal` : '') + '.');
+    toast('Dipulihkan dari Google Drive');
+  }).catch(e => gdMsg('Gagal: ' + (e.message || e)));
+}
+function paintGd(keepMsg) {
+  const box = $('#gdBox'); if (!box) return;
+  if (gdClientId()) loadGis().catch(() => {});
+  if (!gdClientId()) {
+    box.innerHTML = `<p class="hint">Data &amp; foto otomatis dicadangkan ke folder <b>Activity Log</b> di Google Drive-mu. Aplikasi hanya bisa melihat file yang dibuatnya sendiri. Perlu Client ID Google sekali saja.</p>
+      <div class="f"><input type="text" id="gdCid" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" style="width:100%;min-height:44px;border:1px solid var(--line2);border-radius:8px;padding:0 12px;background:var(--bg)"></div>
+      <button type="button" class="btn pri" id="gdSaveCid">Simpan Client ID</button>`;
+    $('#gdSaveCid').onclick = () => {
+      const v = $('#gdCid').value.trim();
+      if (!/^[\w-]+\.apps\.googleusercontent\.com$/.test(v)) { gdMsg('Client ID tidak valid (harus diakhiri .apps.googleusercontent.com).'); return; }
+      S.prefs.gdClientId = v; save(); loadGis().catch(() => {}); paintGd(); gdMsg('Tersimpan. Tap Hubungkan Google Drive.');
+    };
+    return;
+  }
+  const last = S.prefs.gdLast;
+  box.innerHTML = `<p class="hint">${S.prefs.gdConnected ? 'Terhubung' : 'Belum terhubung'}${last ? ' · sinkron terakhir ' + dateShort(ymd(new Date(last))) + ' ' + new Date(last).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'}) : ''}${GD.ok() ? ' · sinkron otomatis aktif' : ''}</p>
+    <div class="grid2"><button type="button" class="btn pri" id="gdSync">${S.prefs.gdConnected ? 'Sinkron sekarang' : 'Hubungkan Google Drive'}</button><button type="button" class="btn" id="gdRestore">Pulihkan dari Drive</button></div>
+    <p class="hint">Setelah tap Sinkron, setiap perubahan &amp; foto baru otomatis terunggah selama ±1 jam. Lewat itu, tap Sinkron lagi (pengingat muncul kalau &gt;1 hari).</p>
+    <button type="button" class="btn ghost" id="gdForget" style="color:var(--tx2)">Ganti Client ID / putuskan</button>`;
+  $('#gdSync').onclick = gdSyncNow;
+  $('#gdRestore').onclick = gdRestoreNow;
+  $('#gdForget').onclick = () => {
+    if (!confirm('Putuskan Google Drive dari aplikasi ini? File di Drive tidak dihapus.')) return;
+    if (GD.token && window.google && google.accounts && google.accounts.oauth2) try { google.accounts.oauth2.revoke(GD.token, () => {}); } catch (e) {}
+    GD.token = null; for (const k of ['gdClientId', 'gdConnected', 'gdFolder', 'gdPhotoFolder', 'gdDataId', 'gdLast']) delete S.prefs[k];
+    save(); paintGd(); gdMsg('Diputuskan.');
+  };
+  if (!keepMsg && !GD.busy) gdMsg('');
+}
 function replaceState(ns, msg) {
   const prev = JSON.stringify(S);
   try { localStorage.setItem(KEY + '-sebelum', prev); } catch (e) {}
-  ns.prefs = Object.assign({}, ns.prefs, {tab: S.prefs.tab});
+  const keepGd = {}; for (const k of ['gdClientId', 'gdConnected', 'gdFolder', 'gdPhotoFolder', 'gdDataId', 'gdLast', 'gdLastSnap']) if (S.prefs[k] != null) keepGd[k] = S.prefs[k];
+  ns.prefs = Object.assign({}, ns.prefs, keepGd, {tab: S.prefs.tab, gdPhotos: Object.assign({}, S.prefs.gdPhotos, ns.prefs && ns.prefs.gdPhotos)});
   S = normalize(ns); save(); render();
   toast(msg, 'Urungkan', () => { S = normalize(JSON.parse(prev)); save(); render(); toast('Dikembalikan'); }, 9000);
 }
@@ -1159,7 +1316,7 @@ async function restoreData(data) {
     const st = [data && data.state, data && data.data, data].find(x => x && Array.isArray(x.days));
     if (!st) throw new Error('Bukan file cadangan Activity Log');
     const n = st.days.reduce((a, d) => a + ((d.items || []).length), 0);
-    if (!confirm(`Pulihkan ${st.days.length} hari dan ${n} aktivitas? Data sekarang diganti (bisa diurungkan sesaat).`)) { msg.textContent = ''; return; }
+    if (!confirm(`Pulihkan ${st.days.length} hari dan ${n} aktivitas? Data sekarang diganti (bisa diurungkan sesaat).`)) { msg.textContent = ''; return false; }
     st.updated = Date.now();
     let ok = 0, fail = 0;
     const ph = data.photos || data.imgs || data.images || {};
@@ -1167,6 +1324,7 @@ async function restoreData(data) {
     for (const [id, u] of pairs) { try { const b = toBlob(u); if (!id || !b) throw 0; if (isLocal(id)) await idb.put(id, b); ok++; } catch (e) { fail++; } }
     replaceState(st, 'Data dipulihkan');
     const m2 = $('#bMsg'); if (m2) m2.textContent = `Dipulihkan: ${st.days.length} hari, ${n} aktivitas, ${ok} foto` + (fail ? `, ${fail} foto gagal` : '') + '.';
+    return true;
   } catch (e) { msg.textContent = 'Gagal memulihkan: ' + (e.message || e); }
 }
 async function deliver(blob, name, type) {
@@ -1350,6 +1508,7 @@ window.addEventListener('pagehide', flushNote);
 
 /* ================= Mulai ================= */
 S = load(); lsSave(); render();
+if (PWA && gdClientId()) loadGis().catch(() => {});
 initCloud();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if (PWA && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
